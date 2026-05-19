@@ -1,19 +1,17 @@
 "use client"
 
 import { FormEvent, useMemo, useState } from "react"
-import { AlertCircle, CheckCircle2, Loader2, MailCheck, Search, ShieldCheck } from "lucide-react"
+import { AlertCircle, CheckCircle2, KeyRound, Loader2, MailCheck, Search, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  buildDnsLookupQuery,
+  filterDnsRecords,
+  stripTxtQuotes,
+  type DnsRecord,
+  type DnsToolMode,
+} from "@/lib/email-tools"
 import { cn } from "@/lib/utils"
-
-type ToolMode = "mx" | "spf" | "dmarc"
-
-type DnsRecord = {
-  name: string
-  type: "MX" | "TXT"
-  ttl: number
-  value: string
-}
 
 type CloudflareDnsAnswer = {
   name: string
@@ -36,7 +34,7 @@ const DNS_TYPE_CODES: Record<number, DnsRecord["type"]> = {
 }
 
 const MODES: Array<{
-  id: ToolMode
+  id: DnsToolMode
   label: string
   title: string
   hint: string
@@ -63,59 +61,33 @@ const MODES: Array<{
     hint: "Checks the _dmarc TXT record used for authentication policy.",
     icon: CheckCircle2,
   },
+  {
+    id: "dkim",
+    label: "DKIM",
+    title: "DKIM key",
+    hint: "Checks a selector._domainkey TXT record for a DKIM public key.",
+    icon: KeyRound,
+  },
 ]
 
-function normalizeInput(value: string) {
-  return value
-    .trim()
-    .replace(/^https?:\/\//i, "")
-    .split("/")[0]
-    .split(":")[0]
-    .replace(/\.$/, "")
-}
-
-function buildQuery(mode: ToolMode, domain: string) {
-  const cleanDomain = normalizeInput(domain)
-
-  return {
-    domain: mode === "dmarc" ? `_dmarc.${cleanDomain}` : cleanDomain,
-    type: mode === "mx" ? "MX" : "TXT",
-  }
-}
-
-function stripTxtQuotes(value: string) {
-  return value.replace(/^"|"$/g, "").replace(/"\s+"/g, "")
-}
-
-function filterRecords(mode: ToolMode, records: DnsRecord[]) {
-  if (mode === "spf") {
-    return records.filter((record) => stripTxtQuotes(record.value).toLowerCase().startsWith("v=spf1"))
-  }
-
-  if (mode === "dmarc") {
-    return records.filter((record) => stripTxtQuotes(record.value).toLowerCase().startsWith("v=dmarc1"))
-  }
-
-  return records
-}
-
-export function DnsLookupTool({ defaultMode = "mx" }: { defaultMode?: ToolMode }) {
-  const [mode, setMode] = useState<ToolMode>(defaultMode)
+export function DnsLookupTool({ defaultMode = "mx" }: { defaultMode?: DnsToolMode }) {
+  const [mode, setMode] = useState<DnsToolMode>(defaultMode)
   const [domain, setDomain] = useState("7752177.xyz")
+  const [selector, setSelector] = useState("default")
   const [result, setResult] = useState<DnsResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
   const currentMode = useMemo(() => MODES.find((item) => item.id === mode) || MODES[0], [mode])
   const visibleRecords = useMemo(
-    () => filterRecords(mode, result?.records || []),
+    () => filterDnsRecords(mode, result?.records || []),
     [mode, result?.records]
   )
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    const query = buildQuery(mode, domain)
+    const query = buildDnsLookupQuery(mode, domain, selector)
 
     if (!query.domain || !query.domain.includes(".")) {
       setError("Enter a domain such as example.com.")
@@ -151,14 +123,14 @@ export function DnsLookupTool({ defaultMode = "mx" }: { defaultMode?: ToolMode }
         .filter((answer) => DNS_TYPE_CODES[answer.type] === query.type)
         .map((answer) => ({
           name: answer.name.replace(/\.$/, ""),
-          type: query.type as DnsRecord["type"],
+          type: query.type,
           ttl: answer.TTL,
           value: answer.data,
         }))
 
       setResult({
         domain: query.domain,
-        type: query.type as DnsRecord["type"],
+        type: query.type,
         status: data.Status,
         records,
       })
@@ -186,7 +158,7 @@ export function DnsLookupTool({ defaultMode = "mx" }: { defaultMode?: ToolMode }
             </p>
           </div>
 
-          <div className="grid grid-cols-3 rounded-md border border-gray-200 p-1 dark:border-gray-800">
+          <div className="grid grid-cols-4 rounded-md border border-gray-200 p-1 dark:border-gray-800">
             {MODES.map((item) => (
               <button
                 key={item.id}
@@ -210,13 +182,24 @@ export function DnsLookupTool({ defaultMode = "mx" }: { defaultMode?: ToolMode }
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row">
-          <Input
-            value={domain}
-            onChange={(event) => setDomain(event.target.value)}
-            placeholder="example.com"
-            aria-label="Domain"
-            className="h-10"
-          />
+          <div className="grid flex-1 gap-3 sm:grid-cols-[1fr_auto]">
+            <Input
+              value={domain}
+              onChange={(event) => setDomain(event.target.value)}
+              placeholder="example.com"
+              aria-label="Domain"
+              className="h-10"
+            />
+            {mode === "dkim" && (
+              <Input
+                value={selector}
+                onChange={(event) => setSelector(event.target.value)}
+                placeholder="selector"
+                aria-label="DKIM selector"
+                className="h-10 sm:w-40"
+              />
+            )}
+          </div>
           <Button type="submit" className="h-10 gap-2 sm:w-36" disabled={isLoading}>
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
             Lookup

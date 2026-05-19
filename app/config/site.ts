@@ -38,6 +38,16 @@ export const EMAIL_TOOL_PAGES = [
     title: "DMARC Checker",
     description: "Inspect a domain's DMARC policy for email authentication and reporting.",
   },
+  {
+    slug: "dkim-checker",
+    title: "DKIM Checker",
+    description: "Look up a DKIM selector record and inspect the public key published for a domain.",
+  },
+  {
+    slug: "email-header-analyzer",
+    title: "Email Header Analyzer",
+    description: "Paste raw email headers to inspect routing hops, authentication results, and message metadata.",
+  },
 ] as const
 
 export type EmailToolPageSlug = (typeof EMAIL_TOOL_PAGES)[number]["slug"]

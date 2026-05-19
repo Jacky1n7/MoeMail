@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { DnsLookupTool } from "@/components/tools/dns-lookup-tool"
+import { EmailHeaderAnalyzerTool } from "@/components/tools/email-header-analyzer-tool"
 import { Header } from "@/components/layout/header"
 import { EMAIL_TOOL_PAGES, type EmailToolPageSlug, SITE_NAME, SITE_URL } from "@/config/site"
 import { i18n, type Locale } from "@/i18n/config"
@@ -9,7 +10,7 @@ import { i18n, type Locale } from "@/i18n/config"
 export const runtime = "edge"
 
 const TOOL_CONTENT: Record<EmailToolPageSlug, {
-  mode: "mx" | "spf" | "dmarc"
+  mode: "mx" | "spf" | "dmarc" | "dkim" | "header"
   heading: string
   body: string[]
 }> = {
@@ -35,6 +36,22 @@ const TOOL_CONTENT: Record<EmailToolPageSlug, {
     body: [
       "DMARC tells receivers how to handle messages that fail SPF or DKIM checks. It can also send reports about authentication results.",
       "Start with monitoring, then tighten policy once legitimate senders are aligned.",
+    ],
+  },
+  "dkim-checker": {
+    mode: "dkim",
+    heading: "How DKIM selectors work",
+    body: [
+      "DKIM records are TXT records under selector._domainkey.example.com. The selector is chosen by the sending service.",
+      "Check DKIM when setting up a mail provider, debugging authentication failures, or rotating signing keys.",
+    ],
+  },
+  "email-header-analyzer": {
+    mode: "header",
+    heading: "What headers can reveal",
+    body: [
+      "Email headers show sender metadata, routing hops, authentication results, and identifiers that help explain how a message reached an inbox.",
+      "They are useful for debugging delivery, investigating spoofing, and checking whether SPF, DKIM, and DMARC passed.",
     ],
   },
 }
@@ -123,7 +140,11 @@ export default async function ToolPage({
               </p>
             </section>
 
-            <DnsLookupTool defaultMode={tool.mode} />
+            {tool.mode === "header" ? (
+              <EmailHeaderAnalyzerTool />
+            ) : (
+              <DnsLookupTool defaultMode={tool.mode} />
+            )}
 
             <section className="space-y-3">
               <h2 className="text-xl md:text-2xl font-semibold tracking-normal text-gray-900 dark:text-white">
