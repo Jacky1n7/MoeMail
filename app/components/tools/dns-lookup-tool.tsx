@@ -15,12 +15,24 @@ type DnsRecord = {
   value: string
 }
 
+type CloudflareDnsAnswer = {
+  name: string
+  type: number
+  TTL: number
+  data: string
+}
+
 type DnsResponse = {
   domain: string
   type: "MX" | "TXT"
   status: number
   records: DnsRecord[]
   error?: string
+}
+
+const DNS_TYPE_CODES: Record<number, DnsRecord["type"]> = {
+  15: "MX",
+  16: "TXT",
 }
 
 const MODES: Array<{
@@ -115,17 +127,41 @@ export function DnsLookupTool({ defaultMode = "mx" }: { defaultMode?: ToolMode }
     setError(null)
 
     try {
-      const params = new URLSearchParams(query)
-      const response = await fetch(`/api/tools/dns?${params.toString()}`)
-      const data = (await response.json()) as DnsResponse
+      const params = new URLSearchParams({
+        name: query.domain,
+        type: query.type,
+      })
+      const response = await fetch(`https://cloudflare-dns.com/dns-query?${params.toString()}`, {
+        headers: {
+          accept: "application/dns-json",
+        },
+      })
 
       if (!response.ok) {
-        setError(data.error || "Lookup failed.")
+        setError("DNS resolver request failed.")
         setResult(null)
         return
       }
 
-      setResult(data)
+      const data = (await response.json()) as {
+        Status: number
+        Answer?: CloudflareDnsAnswer[]
+      }
+      const records = (data.Answer || [])
+        .filter((answer) => DNS_TYPE_CODES[answer.type] === query.type)
+        .map((answer) => ({
+          name: answer.name.replace(/\.$/, ""),
+          type: query.type as DnsRecord["type"],
+          ttl: answer.TTL,
+          value: answer.data,
+        }))
+
+      setResult({
+        domain: query.domain,
+        type: query.type as DnsRecord["type"],
+        status: data.Status,
+        records,
+      })
     } catch {
       setError("Lookup failed. Check the domain and try again.")
       setResult(null)
