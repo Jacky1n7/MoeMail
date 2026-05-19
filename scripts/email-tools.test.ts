@@ -1,6 +1,9 @@
 import assert from "node:assert/strict"
 import {
+  buildDmarcRecord,
   buildDnsLookupQuery,
+  buildDnsblQueries,
+  buildSpfRecord,
   filterDnsRecords,
   parseEmailHeaders,
   stripTxtQuotes,
@@ -56,3 +59,31 @@ Received: from unknown by mx.example.net
 
 assert.equal(missingAuth.authentication.spf, "unknown")
 assert.equal(missingAuth.signals.some((signal) => signal.kind === "warning" && signal.label === "No SPF pass found"), true)
+
+const spfRecord = buildSpfRecord({
+  allowA: true,
+  allowMx: true,
+  includes: " _spf.google.com,sendgrid.net ",
+  ip4: "192.0.2.10, 198.51.100.7",
+  all: "~all",
+})
+assert.equal(spfRecord, "v=spf1 a mx include:_spf.google.com include:sendgrid.net ip4:192.0.2.10 ip4:198.51.100.7 ~all")
+
+const dmarcRecord = buildDmarcRecord({
+  policy: "quarantine",
+  rua: "dmarc@example.com, mailto:reports@example.net",
+  pct: 50,
+})
+assert.equal(dmarcRecord, "v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com,mailto:reports@example.net; pct=50")
+
+const dnsblQueries = buildDnsblQueries("192.0.2.10")
+assert.deepEqual(dnsblQueries.slice(0, 2), [
+  {
+    zone: "zen.spamhaus.org",
+    query: "10.2.0.192.zen.spamhaus.org",
+  },
+  {
+    zone: "bl.spamcop.net",
+    query: "10.2.0.192.bl.spamcop.net",
+  },
+])

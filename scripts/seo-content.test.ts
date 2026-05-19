@@ -1,8 +1,9 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import sitemap from "../app/sitemap"
-import { EMAIL_GUIDE_PAGES, EMAIL_TOOL_PAGES, SITE_URL, TRUST_AND_SEO_PAGES } from "../app/config/site"
+import { EMAIL_GUIDE_PAGES, EMAIL_TOOL_PAGES, INDEXNOW_KEY, INDEXNOW_KEY_LOCATION, SITE_HOST, SITE_URL, TRUST_AND_SEO_PAGES } from "../app/config/site"
 import { i18n, type Locale } from "../app/i18n/config"
+import { createIndexNowPayload } from "../app/lib/indexnow"
 import {
   getEmailGuideContent,
   getEmailToolContent,
@@ -90,4 +91,34 @@ for (const locale of i18n.locales as readonly Locale[]) {
       `${locale}/${guide.slug} missing from sitemap`
     )
   }
+
+  for (const tool of EMAIL_TOOL_PAGES) {
+    assert.ok(
+      sitemapUrls.includes(`${SITE_URL}/${locale}/tools/${tool.slug}`),
+      `${locale}/${tool.slug} missing from sitemap`
+    )
+  }
 }
+
+for (const slug of ["spf-generator", "dmarc-generator", "blacklist-checker"]) {
+  assert.ok(EMAIL_TOOL_PAGES.some((tool) => tool.slug === slug), `${slug} tool metadata is missing`)
+}
+
+assert.match(INDEXNOW_KEY, /^[a-zA-Z0-9-]{8,128}$/)
+assert.equal(readFileSync(`public/${INDEXNOW_KEY}.txt`, "utf8").trim(), INDEXNOW_KEY)
+assert.equal(INDEXNOW_KEY_LOCATION, `${SITE_URL}/${INDEXNOW_KEY}.txt`)
+
+const indexNowPayload = createIndexNowPayload([
+  `${SITE_URL}/en/tools/spf-generator`,
+  "https://example.com/not-this-site",
+  `${SITE_URL}/zh-CN/tools/dmarc-generator`,
+])
+assert.deepEqual(indexNowPayload, {
+  host: SITE_HOST,
+  key: INDEXNOW_KEY,
+  keyLocation: INDEXNOW_KEY_LOCATION,
+  urlList: [
+    `${SITE_URL}/en/tools/spf-generator`,
+    `${SITE_URL}/zh-CN/tools/dmarc-generator`,
+  ],
+})

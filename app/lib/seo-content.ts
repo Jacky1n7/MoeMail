@@ -57,7 +57,7 @@ export type EmailHeaderAnalyzerCopy = {
 
 export type EmailToolContent = {
   slug: EmailToolPageSlug
-  mode: "mx" | "spf" | "dmarc" | "dkim" | "header"
+  mode: "mx" | "spf" | "dmarc" | "dkim" | "header" | "spf-generator" | "dmarc-generator" | "blacklist"
   title: string
   description: string
   breadcrumb: string
@@ -592,7 +592,9 @@ const TOOLS_INDEX: Record<Locale, ToolsIndexContent> = {
   },
 }
 
-const TOOL_CONTENT: Record<Locale, Record<EmailToolPageSlug, Omit<EmailToolContent, "slug" | "toolCopy" | "headerCopy">>> = {
+type EmailToolContentEntry = Omit<EmailToolContent, "slug" | "toolCopy" | "headerCopy">
+
+const TOOL_CONTENT: Record<Locale, Partial<Record<EmailToolPageSlug, EmailToolContentEntry>>> = {
   en: {
     "mx-lookup": {
       mode: "mx",
@@ -1224,6 +1226,394 @@ const TOOL_CONTENT: Record<Locale, Record<EmailToolPageSlug, Omit<EmailToolConte
         {
           question: "인증 결과는 어떤 헤더를 봐야 하나요?",
           answer: "Authentication-Results는 보통 수신 시스템이 판단한 SPF, DKIM, DMARC 결과를 요약합니다.",
+        },
+      ],
+    },
+  },
+}
+
+const ADDITIONAL_TOOL_CONTENT: Record<Locale, Record<"spf-generator" | "dmarc-generator" | "blacklist-checker", EmailToolContentEntry>> = {
+  en: {
+    "spf-generator": {
+      mode: "spf-generator",
+      title: "SPF Generator",
+      description: "Build a clean SPF TXT record for domains that send email through apps and providers.",
+      breadcrumb: "Email Tools",
+      sections: [
+        {
+          heading: "Create one publishable SPF record",
+          body: [
+            "SPF records should stay readable and singular: one TXT record beginning with v=spf1, followed by the services that are allowed to send.",
+            "Use this generator when adding a newsletter platform, transactional mail provider, support desk, or self-hosted mail server.",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "Should I publish more than one SPF record?",
+          answer: "No. Merge all senders into one SPF record to avoid permanent errors at receivers.",
+        },
+        {
+          question: "Should I choose ~all or -all?",
+          answer: "Use ~all while testing. Move to -all only after every legitimate sender is included.",
+        },
+      ],
+    },
+    "dmarc-generator": {
+      mode: "dmarc-generator",
+      title: "DMARC Generator",
+      description: "Create a DMARC TXT record for monitoring, quarantine, or reject policies.",
+      breadcrumb: "Email Tools",
+      sections: [
+        {
+          heading: "Start with reporting, then enforce",
+          body: [
+            "A DMARC record tells receivers what to do when messages fail authentication alignment and where to send aggregate reports.",
+            "Most domains should start with p=none, review reports, then move to quarantine or reject after legitimate senders pass SPF or DKIM alignment.",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "Where do I publish the DMARC record?",
+          answer: "Publish it as a TXT record at _dmarc.yourdomain.com.",
+        },
+        {
+          question: "Do I need a report email?",
+          answer: "A rua mailbox is strongly recommended because reports reveal unknown senders and authentication failures.",
+        },
+      ],
+    },
+    "blacklist-checker": {
+      mode: "blacklist",
+      title: "Email Blacklist Checker",
+      description: "Check whether an IPv4 address appears on common DNS blocklists used by mail receivers.",
+      breadcrumb: "Email Tools",
+      sections: [
+        {
+          heading: "Check sender reputation signals",
+          body: [
+            "DNS blocklists are one signal mail receivers can use when deciding whether to accept or filter a message.",
+            "A listing does not always mean every inbox will block you, but it is a useful starting point when mail suddenly goes to spam.",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "Does this check every blacklist?",
+          answer: "No. It checks a focused set of common DNSBL zones and should be combined with provider-specific postmaster tools.",
+        },
+        {
+          question: "Can I check a domain name?",
+          answer: "This checker is for IPv4 sender addresses. Look up the sending IP from your mail headers first.",
+        },
+      ],
+    },
+  },
+  "zh-CN": {
+    "spf-generator": {
+      mode: "spf-generator",
+      title: "SPF 生成器",
+      description: "为通过应用和服务商发信的域名生成干净的 SPF TXT 记录。",
+      breadcrumb: "邮件工具",
+      sections: [
+        {
+          heading: "生成一条可发布的 SPF 记录",
+          body: [
+            "SPF 应该保持清晰且只有一条：以 v=spf1 开头，再列出允许发信的服务。",
+            "添加群发平台、事务邮件服务、客服系统或自建邮件服务器时，可以用它快速生成初稿。",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "可以发布多条 SPF 记录吗？",
+          answer: "不建议。应把所有发信源合并到一条 SPF 里，否则收件方可能返回 permanent error。",
+        },
+        {
+          question: "应该选 ~all 还是 -all？",
+          answer: "测试期用 ~all。确认所有合法发信源都包含后，再切到 -all。",
+        },
+      ],
+    },
+    "dmarc-generator": {
+      mode: "dmarc-generator",
+      title: "DMARC 生成器",
+      description: "生成用于监控、隔离或拒收策略的 DMARC TXT 记录。",
+      breadcrumb: "邮件工具",
+      sections: [
+        {
+          heading: "先收报告，再逐步强制",
+          body: [
+            "DMARC 记录会告诉收件方认证对齐失败时如何处理邮件，以及把汇总报告发到哪里。",
+            "多数域名应先从 p=none 开始，查看报告，确认合法发信源通过 SPF 或 DKIM 对齐后再切到 quarantine 或 reject。",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "DMARC 记录发布在哪里？",
+          answer: "作为 TXT 记录发布在 _dmarc.yourdomain.com。",
+        },
+        {
+          question: "一定要填写报告邮箱吗？",
+          answer: "强烈建议填写 rua 邮箱，因为报告能发现未知发信源和认证失败。",
+        },
+      ],
+    },
+    "blacklist-checker": {
+      mode: "blacklist",
+      title: "邮件黑名单检查",
+      description: "检查 IPv4 发信地址是否出现在常见 DNS 黑名单中。",
+      breadcrumb: "邮件工具",
+      sections: [
+        {
+          heading: "检查发信信誉信号",
+          body: [
+            "DNS 黑名单是收件方判断邮件是否接收或过滤时可能参考的信号之一。",
+            "被列入并不代表所有邮箱都会拦截，但当邮件突然进垃圾箱时，它是很值得先查的一项。",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "这个工具会检查所有黑名单吗？",
+          answer: "不会。它检查一组常见 DNSBL 区域，仍建议结合邮件服务商的 postmaster 工具一起看。",
+        },
+        {
+          question: "可以检查域名吗？",
+          answer: "这个检查器面向 IPv4 发信地址。请先从邮件头里找到实际发信 IP。",
+        },
+      ],
+    },
+  },
+  "zh-TW": {
+    "spf-generator": {
+      mode: "spf-generator",
+      title: "SPF 產生器",
+      description: "為透過應用程式和服務商寄信的網域產生乾淨的 SPF TXT 記錄。",
+      breadcrumb: "郵件工具",
+      sections: [
+        {
+          heading: "產生一筆可發布的 SPF 記錄",
+          body: [
+            "SPF 應保持清晰且只有一筆：以 v=spf1 開頭，再列出允許寄信的服務。",
+            "新增群發平台、交易郵件服務、客服系統或自架郵件伺服器時，可以用它快速產生初稿。",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "可以發布多筆 SPF 記錄嗎？",
+          answer: "不建議。應把所有寄信來源合併到一筆 SPF，否則收件方可能返回 permanent error。",
+        },
+        {
+          question: "應該選 ~all 還是 -all？",
+          answer: "測試期用 ~all。確認所有合法寄信來源都包含後，再切到 -all。",
+        },
+      ],
+    },
+    "dmarc-generator": {
+      mode: "dmarc-generator",
+      title: "DMARC 產生器",
+      description: "產生用於監控、隔離或拒收政策的 DMARC TXT 記錄。",
+      breadcrumb: "郵件工具",
+      sections: [
+        {
+          heading: "先收報告，再逐步強制",
+          body: [
+            "DMARC 記錄會告訴收件方驗證對齊失敗時如何處理郵件，以及把彙總報告寄到哪裡。",
+            "多數網域應先從 p=none 開始，查看報告，確認合法寄信來源通過 SPF 或 DKIM 對齊後再切到 quarantine 或 reject。",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "DMARC 記錄發布在哪裡？",
+          answer: "作為 TXT 記錄發布在 _dmarc.yourdomain.com。",
+        },
+        {
+          question: "一定要填報告信箱嗎？",
+          answer: "強烈建議填 rua 信箱，因為報告能發現未知寄信來源和驗證失敗。",
+        },
+      ],
+    },
+    "blacklist-checker": {
+      mode: "blacklist",
+      title: "郵件黑名單檢查",
+      description: "檢查 IPv4 寄信地址是否出現在常見 DNS 黑名單中。",
+      breadcrumb: "郵件工具",
+      sections: [
+        {
+          heading: "檢查寄信信譽信號",
+          body: [
+            "DNS 黑名單是收件方判斷郵件是否接收或過濾時可能參考的信號之一。",
+            "被列入不代表所有信箱都會攔截，但郵件突然進垃圾信時，它很值得先查。",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "這個工具會檢查所有黑名單嗎？",
+          answer: "不會。它檢查一組常見 DNSBL 區域，仍建議搭配郵件服務商的 postmaster 工具。",
+        },
+        {
+          question: "可以檢查網域嗎？",
+          answer: "這個檢查器面向 IPv4 寄信地址。請先從郵件標頭找到實際寄信 IP。",
+        },
+      ],
+    },
+  },
+  ja: {
+    "spf-generator": {
+      mode: "spf-generator",
+      title: "SPF ジェネレーター",
+      description: "アプリやプロバイダー経由で送信するドメイン向けに、整理された SPF TXT レコードを作成します。",
+      breadcrumb: "メールツール",
+      sections: [
+        {
+          heading: "公開しやすい SPF レコードを作る",
+          body: [
+            "SPF は v=spf1 で始まる 1 つの TXT レコードにまとめ、送信を許可するサービスを列挙します。",
+            "ニュースレター、トランザクションメール、サポートデスク、自前のメールサーバーを追加するときに使えます。",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "SPF レコードを複数公開してもよいですか？",
+          answer: "いいえ。送信元は 1 つの SPF レコードに統合しないと permanent error になることがあります。",
+        },
+        {
+          question: "~all と -all のどちらを選ぶべきですか？",
+          answer: "テスト中は ~all を使い、正当な送信元をすべて含めてから -all に進みます。",
+        },
+      ],
+    },
+    "dmarc-generator": {
+      mode: "dmarc-generator",
+      title: "DMARC ジェネレーター",
+      description: "監視、隔離、拒否ポリシー向けの DMARC TXT レコードを作成します。",
+      breadcrumb: "メールツール",
+      sections: [
+        {
+          heading: "レポートから始めて段階的に強化",
+          body: [
+            "DMARC レコードは、認証整合に失敗したメールの扱いと集計レポートの送信先を受信側に伝えます。",
+            "多くのドメインでは p=none で監視し、正当な送信元が SPF または DKIM で整合することを確認してから quarantine や reject に進みます。",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "DMARC レコードはどこに公開しますか？",
+          answer: "_dmarc.yourdomain.com に TXT レコードとして公開します。",
+        },
+        {
+          question: "レポート用メールアドレスは必要ですか？",
+          answer: "rua の設定を強く推奨します。未知の送信元や認証失敗を見つけられます。",
+        },
+      ],
+    },
+    "blacklist-checker": {
+      mode: "blacklist",
+      title: "メールブラックリストチェック",
+      description: "IPv4 送信元アドレスが一般的な DNS ブラックリストに掲載されているか確認します。",
+      breadcrumb: "メールツール",
+      sections: [
+        {
+          heading: "送信元レピュテーションの信号を確認",
+          body: [
+            "DNS ブラックリストは、受信側がメールを受け入れるかフィルタするかを判断する材料の一つです。",
+            "掲載されてもすべての受信箱で拒否されるわけではありませんが、急に迷惑メールに入る場合の重要な確認点です。",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "すべてのブラックリストを確認しますか？",
+          answer: "いいえ。よく使われる DNSBL を絞って確認します。プロバイダーの postmaster ツールも併用してください。",
+        },
+        {
+          question: "ドメイン名を確認できますか？",
+          answer: "このツールは IPv4 送信元アドレス向けです。まずメールヘッダーから送信 IP を確認してください。",
+        },
+      ],
+    },
+  },
+  ko: {
+    "spf-generator": {
+      mode: "spf-generator",
+      title: "SPF 생성기",
+      description: "앱과 제공업체를 통해 메일을 보내는 도메인을 위한 깔끔한 SPF TXT 레코드를 만듭니다.",
+      breadcrumb: "메일 도구",
+      sections: [
+        {
+          heading: "게시 가능한 SPF 레코드 만들기",
+          body: [
+            "SPF는 v=spf1로 시작하는 하나의 TXT 레코드에 허용된 발신 서비스를 정리해야 합니다.",
+            "뉴스레터, 트랜잭션 메일, 고객지원 도구, 자체 메일 서버를 추가할 때 초안을 빠르게 만들 수 있습니다.",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "SPF 레코드를 여러 개 게시해도 되나요?",
+          answer: "아니요. 모든 발신자를 하나의 SPF 레코드로 합쳐야 permanent error를 피할 수 있습니다.",
+        },
+        {
+          question: "~all과 -all 중 무엇을 써야 하나요?",
+          answer: "테스트 중에는 ~all을 쓰고, 모든 정상 발신자가 포함된 뒤 -all로 이동하세요.",
+        },
+      ],
+    },
+    "dmarc-generator": {
+      mode: "dmarc-generator",
+      title: "DMARC 생성기",
+      description: "모니터링, 격리, 거부 정책에 사용할 DMARC TXT 레코드를 만듭니다.",
+      breadcrumb: "메일 도구",
+      sections: [
+        {
+          heading: "보고서로 시작해 점진적으로 강화",
+          body: [
+            "DMARC 레코드는 인증 정렬에 실패한 메일을 어떻게 처리할지와 집계 보고서를 어디로 보낼지 수신자에게 알려줍니다.",
+            "대부분의 도메인은 p=none으로 시작해 보고서를 확인하고, 정상 발신자가 SPF 또는 DKIM 정렬을 통과한 뒤 quarantine이나 reject로 이동합니다.",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "DMARC 레코드는 어디에 게시하나요?",
+          answer: "_dmarc.yourdomain.com에 TXT 레코드로 게시합니다.",
+        },
+        {
+          question: "보고서 이메일이 필요한가요?",
+          answer: "rua 메일함을 권장합니다. 알 수 없는 발신자와 인증 실패를 발견하는 데 도움이 됩니다.",
+        },
+      ],
+    },
+    "blacklist-checker": {
+      mode: "blacklist",
+      title: "메일 블랙리스트 검사",
+      description: "IPv4 발신 주소가 일반적인 DNS 차단 목록에 있는지 확인합니다.",
+      breadcrumb: "메일 도구",
+      sections: [
+        {
+          heading: "발신 평판 신호 확인",
+          body: [
+            "DNS 차단 목록은 수신자가 메일을 허용하거나 필터링할 때 참고할 수 있는 신호 중 하나입니다.",
+            "등재가 모든 받은편지함 차단을 의미하지는 않지만, 메일이 갑자기 스팸함으로 갈 때 먼저 확인할 가치가 있습니다.",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "모든 블랙리스트를 확인하나요?",
+          answer: "아니요. 일반적인 DNSBL 일부를 확인하며, 제공업체별 postmaster 도구와 함께 보는 것이 좋습니다.",
+        },
+        {
+          question: "도메인도 확인할 수 있나요?",
+          answer: "이 검사는 IPv4 발신 주소용입니다. 먼저 메일 헤더에서 실제 발신 IP를 확인하세요.",
         },
       ],
     },
@@ -2067,7 +2457,11 @@ export function getSearchDescription(locale: Locale, kind: SearchMetadataKind, d
 }
 
 export function getEmailToolContent(locale: Locale, slug: EmailToolPageSlug): EmailToolContent {
-  const localized = TOOL_CONTENT[locale]?.[slug] || TOOL_CONTENT[DEFAULT_LOCALE][slug]
+  const localized =
+    TOOL_CONTENT[locale]?.[slug] ||
+    ADDITIONAL_TOOL_CONTENT[locale]?.[slug as keyof (typeof ADDITIONAL_TOOL_CONTENT)[Locale]] ||
+    TOOL_CONTENT[DEFAULT_LOCALE][slug] ||
+    ADDITIONAL_TOOL_CONTENT[DEFAULT_LOCALE][slug as keyof (typeof ADDITIONAL_TOOL_CONTENT)[Locale]]
 
   return {
     slug,

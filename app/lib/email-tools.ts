@@ -12,6 +12,27 @@ export type DnsLookupQuery = {
   type: "MX" | "TXT"
 }
 
+export type SpfRecordInput = {
+  allowA: boolean
+  allowMx: boolean
+  includes: string
+  ip4: string
+  all: "~all" | "-all" | "?all"
+}
+
+export type DmarcRecordInput = {
+  policy: "none" | "quarantine" | "reject"
+  rua: string
+  pct: number
+}
+
+export const DNSBL_ZONES = [
+  "zen.spamhaus.org",
+  "bl.spamcop.net",
+  "b.barracudacentral.org",
+  "dnsbl.sorbs.net",
+] as const
+
 export type HeaderSignal = {
   kind: "good" | "warning" | "info"
   label: string
@@ -94,6 +115,69 @@ export function filterDnsRecords(mode: DnsToolMode, records: DnsRecord[]) {
   }
 
   return records
+}
+
+function splitRecordTokens(value: string) {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+export function buildSpfRecord(input: SpfRecordInput) {
+  const mechanisms = [
+    input.allowA ? "a" : "",
+    input.allowMx ? "mx" : "",
+    ...splitRecordTokens(input.includes).map((include) => `include:${include.replace(/^include:/i, "")}`),
+    ...splitRecordTokens(input.ip4).map((ip) => `ip4:${ip.replace(/^ip4:/i, "")}`),
+    input.all,
+  ].filter(Boolean)
+
+  return `v=spf1 ${mechanisms.join(" ")}`
+}
+
+export function buildDmarcRecord(input: DmarcRecordInput) {
+  const pct = Math.min(100, Math.max(1, Math.round(input.pct || 100)))
+  const parts = [`v=DMARC1`, `p=${input.policy}`]
+  const rua = splitRecordTokens(input.rua)
+    .map((address) => address.startsWith("mailto:") ? address : `mailto:${address}`)
+    .join(",")
+
+  if (rua) {
+    parts.push(`rua=${rua}`)
+  }
+
+  parts.push(`pct=${pct}`)
+
+  return parts.join("; ")
+}
+
+export function isValidIpv4(value: string) {
+  const parts = value.trim().split(".")
+
+  return parts.length === 4 && parts.every((part) => {
+    if (!/^\d{1,3}$/.test(part)) {
+      return false
+    }
+
+    const number = Number(part)
+    return number >= 0 && number <= 255 && String(number) === String(Number.parseInt(part, 10))
+  })
+}
+
+export function buildDnsblQueries(ipv4: string) {
+  const cleanIp = ipv4.trim()
+
+  if (!isValidIpv4(cleanIp)) {
+    return []
+  }
+
+  const reversed = cleanIp.split(".").reverse().join(".")
+
+  return DNSBL_ZONES.map((zone) => ({
+    zone,
+    query: `${reversed}.${zone}`,
+  }))
 }
 
 function unfoldHeaders(rawHeaders: string) {

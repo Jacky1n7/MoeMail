@@ -1,8 +1,10 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
+import { BlacklistCheckerTool } from "@/components/tools/blacklist-checker-tool"
 import { DnsLookupTool } from "@/components/tools/dns-lookup-tool"
 import { EmailHeaderAnalyzerTool } from "@/components/tools/email-header-analyzer-tool"
+import { EmailRecordGeneratorTool } from "@/components/tools/email-record-generator-tool"
 import { Header } from "@/components/layout/header"
 import { EMAIL_TOOL_PAGES, type EmailToolPageSlug, SITE_NAME, SITE_URL } from "@/config/site"
 import { i18n, type Locale } from "@/i18n/config"
@@ -105,6 +107,12 @@ export default async function ToolPage({
 
             {tool.mode === "header" ? (
               <EmailHeaderAnalyzerTool copy={tool.headerCopy} />
+            ) : tool.mode === "spf-generator" ? (
+              <EmailRecordGeneratorTool kind="spf" locale={locale} />
+            ) : tool.mode === "dmarc-generator" ? (
+              <EmailRecordGeneratorTool kind="dmarc" locale={locale} />
+            ) : tool.mode === "blacklist" ? (
+              <BlacklistCheckerTool locale={locale} />
             ) : (
               <DnsLookupTool copy={tool.toolCopy} defaultMode={tool.mode} />
             )}

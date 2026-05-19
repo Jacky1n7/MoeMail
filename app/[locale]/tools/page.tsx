@@ -1,6 +1,6 @@
 import Link from "next/link"
 import type { Metadata } from "next"
-import { ArrowRight, BookOpen, CheckCircle2, FileText, KeyRound, MailCheck, ShieldCheck } from "lucide-react"
+import { ArrowRight, BookOpen, CheckCircle2, FileCog, FileText, KeyRound, MailCheck, ShieldAlert, ShieldCheck } from "lucide-react"
 import { Header } from "@/components/layout/header"
 import { EMAIL_GUIDE_PAGES, EMAIL_TOOL_PAGES, SITE_NAME, SITE_URL } from "@/config/site"
 import { i18n, type Locale } from "@/i18n/config"
@@ -15,7 +15,7 @@ import {
 
 export const runtime = "edge"
 
-const ICONS = [MailCheck, ShieldCheck, CheckCircle2, KeyRound, FileText]
+const ICONS = [MailCheck, ShieldCheck, CheckCircle2, KeyRound, FileText, FileCog, CheckCircle2, ShieldAlert]
 
 export async function generateMetadata({
   params,
