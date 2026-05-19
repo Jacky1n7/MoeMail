@@ -7,6 +7,7 @@ import { FloatMenu } from "@/components/float-menu"
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { cn } from "@/lib/utils"
+import { SITE_NAME, SITE_URL } from "@/config/site"
 import { zpix } from "../fonts"
 import "../globals.css"
 import { Providers } from "../providers"
@@ -45,15 +46,17 @@ export async function generateMetadata({
   const locale = localeFromParams as Locale
   const t = await getTranslations({ locale, namespace: "metadata" })
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://moemail.app"
+  const baseUrl = SITE_URL
   
   // Generate hreflang links for all supported locales
   const languages: Record<string, string> = {}
   i18n.locales.forEach((loc) => {
     languages[loc] = `${baseUrl}/${loc}`
   })
+  languages["x-default"] = `${baseUrl}/${i18n.defaultLocale}`
 
   return {
+    metadataBase: new URL(baseUrl),
     title: t("title"),
     description: t("description"),
     keywords: t("keywords"),
@@ -74,7 +77,7 @@ export async function generateMetadata({
       url: `${baseUrl}/${locale}`,
       title: t("title"),
       description: t("description"),
-      siteName: "MoeMail",
+      siteName: SITE_NAME,
     },
     twitter: {
       card: "summary_large_image",
@@ -144,4 +147,3 @@ export default async function LocaleLayout({
     </html>
   )
 }
-

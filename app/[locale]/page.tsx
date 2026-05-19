@@ -5,6 +5,7 @@ import { ActionButton } from "@/components/home/action-button"
 import { FeatureCard } from "@/components/home/feature-card"
 import { getTranslations } from "next-intl/server"
 import type { Locale } from "@/i18n/config"
+import Link from "next/link"
 
 export const runtime = "edge"
 
@@ -64,6 +65,21 @@ export default async function Home({
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 px-2 sm:px-0">
                 <ActionButton isLoggedIn={!!session} />
               </div>
+
+              <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-2 text-xs text-gray-500 dark:text-gray-400">
+                {[
+                  ["Temporary Email", "temporary-email"],
+                  ["API", "temporary-email-api"],
+                  ["Email Testing", "email-testing"],
+                  ["Privacy", "privacy"],
+                  ["Terms", "terms"],
+                  ["Contact", "contact"],
+                ].map(([label, href]) => (
+                  <Link key={href} href={`/${locale}/${href}`} className="hover:text-primary hover:underline">
+                    {label}
+                  </Link>
+                ))}
+              </nav>
             </div>
           </div>
         </main>
@@ -71,4 +87,3 @@ export default async function Home({
     </div>
   )
 }
-
