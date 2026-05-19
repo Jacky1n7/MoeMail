@@ -1,6 +1,7 @@
 import { PERMISSIONS, Role, ROLES } from "@/lib/permissions"
 import { getRequestContext } from "@cloudflare/next-on-pages"
 import { EMAIL_CONFIG } from "@/config"
+import { DEFAULT_EMAIL_DOMAIN } from "@/config/site"
 import { checkPermission } from "@/lib/auth"
 
 export const runtime = "edge"
@@ -29,7 +30,7 @@ export async function GET() {
 
   return Response.json({
     defaultRole: defaultRole || ROLES.CIVILIAN,
-    emailDomains: emailDomains || "moemail.app",
+    emailDomains: emailDomains || DEFAULT_EMAIL_DOMAIN,
     adminContact: adminContact || "",
     maxEmails: maxEmails || EMAIL_CONFIG.MAX_ACTIVE_EMAILS.toString(),
     turnstile: canManageConfig ? {
