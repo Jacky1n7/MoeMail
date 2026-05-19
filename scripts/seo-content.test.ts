@@ -1,14 +1,23 @@
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
 import sitemap from "../app/sitemap"
-import { EMAIL_GUIDE_PAGES, EMAIL_TOOL_PAGES, SITE_URL } from "../app/config/site"
+import { EMAIL_GUIDE_PAGES, EMAIL_TOOL_PAGES, SITE_URL, TRUST_AND_SEO_PAGES } from "../app/config/site"
 import { i18n, type Locale } from "../app/i18n/config"
 import {
   getEmailGuideContent,
   getEmailToolContent,
+  getMarketingPageContent,
   getToolsIndexContent,
 } from "../app/lib/seo-content"
 
 for (const locale of i18n.locales) {
+  const homeMessages = JSON.parse(readFileSync(`app/i18n/messages/${locale}/home.json`, "utf8")) as {
+    links?: Record<string, string>
+  }
+  assert.ok(homeMessages.links, `${locale} home links are missing`)
+  assert.ok(homeMessages.links?.temporaryEmail, `${locale} temporary email home link is missing`)
+  assert.ok(homeMessages.links?.emailTesting, `${locale} email testing home link is missing`)
+
   const toolsIndex = getToolsIndexContent(locale)
   assert.ok(toolsIndex.title.length > 0, `${locale} tools index title is missing`)
   assert.ok(toolsIndex.description.length > 0, `${locale} tools index description is missing`)
@@ -33,6 +42,14 @@ for (const locale of i18n.locales) {
     assert.ok(content.relatedTools.length >= 1, `${locale}/${guide.slug} related tools are missing`)
     assert.ok(content.faq.length >= 2, `${locale}/${guide.slug} FAQ is missing`)
   }
+
+  for (const page of TRUST_AND_SEO_PAGES) {
+    const content = getMarketingPageContent(locale, page)
+    assert.equal(content.slug, page)
+    assert.ok(content.title.length > 0, `${locale}/${page} title is missing`)
+    assert.ok(content.description.length > 0, `${locale}/${page} description is missing`)
+    assert.ok(content.sections.length >= 1, `${locale}/${page} sections are missing`)
+  }
 }
 
 assert.notEqual(
@@ -45,6 +62,12 @@ assert.notEqual(
   getEmailGuideContent("ja", "how-to-read-email-headers").title,
   getEmailGuideContent("en", "how-to-read-email-headers").title,
   "ja guide content should be localized"
+)
+
+assert.notEqual(
+  getMarketingPageContent("ko", "privacy").title,
+  getMarketingPageContent("en", "privacy").title,
+  "ko marketing page content should be localized"
 )
 
 const sitemapUrls = sitemap().map((entry) => entry.url)

@@ -2,6 +2,8 @@ import type { EmailGuidePageSlug, EmailToolPageSlug } from "@/config/site"
 import { SITE_NAME, SITE_URL } from "@/config/site"
 import { i18n, type Locale } from "@/i18n/config"
 import type { DnsToolMode } from "@/lib/email-tools"
+export { getMarketingPageContent } from "@/lib/marketing-content"
+export type { MarketingPageContent } from "@/lib/marketing-content"
 
 export type FaqItem = {
   question: string

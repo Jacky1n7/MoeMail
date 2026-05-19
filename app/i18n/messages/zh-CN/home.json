@@ -22,6 +22,13 @@
   "actions": {
     "enterMailbox": "进入邮箱",
     "getStarted": "开始使用"
+  },
+  "links": {
+    "temporaryEmail": "临时邮箱",
+    "api": "API",
+    "emailTesting": "邮件测试",
+    "privacy": "隐私",
+    "terms": "条款",
+    "contact": "联系"
   }
 }
-

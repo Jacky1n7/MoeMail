@@ -9,6 +9,15 @@ import Link from "next/link"
 
 export const runtime = "edge"
 
+const HOME_LINKS = [
+  ["temporaryEmail", "temporary-email"],
+  ["api", "temporary-email-api"],
+  ["emailTesting", "email-testing"],
+  ["privacy", "privacy"],
+  ["terms", "terms"],
+  ["contact", "contact"],
+] as const
+
 export default async function Home({
   params,
 }: {
@@ -67,16 +76,9 @@ export default async function Home({
               </div>
 
               <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-2 text-xs text-gray-500 dark:text-gray-400">
-                {[
-                  ["Temporary Email", "temporary-email"],
-                  ["API", "temporary-email-api"],
-                  ["Email Testing", "email-testing"],
-                  ["Privacy", "privacy"],
-                  ["Terms", "terms"],
-                  ["Contact", "contact"],
-                ].map(([label, href]) => (
+                {HOME_LINKS.map(([labelKey, href]) => (
                   <Link key={href} href={`/${locale}/${href}`} className="hover:text-primary hover:underline">
-                    {label}
+                    {t(`links.${labelKey}`)}
                   </Link>
                 ))}
               </nav>

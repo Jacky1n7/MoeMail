@@ -22,5 +22,13 @@
   "actions": {
     "enterMailbox": "메일함 입장",
     "getStarted": "시작하기"
+  },
+  "links": {
+    "temporaryEmail": "임시 이메일",
+    "api": "API",
+    "emailTesting": "메일 테스트",
+    "privacy": "개인정보",
+    "terms": "약관",
+    "contact": "문의"
   }
 }
