@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next"
 import { i18n } from "@/i18n/config"
-import { EMAIL_TOOL_PAGES, SITE_URL, TRUST_AND_SEO_PAGES } from "@/config/site"
+import { EMAIL_GUIDE_PAGES, EMAIL_TOOL_PAGES, SITE_URL, TRUST_AND_SEO_PAGES } from "@/config/site"
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()
@@ -9,6 +9,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...TRUST_AND_SEO_PAGES,
     "tools",
     ...EMAIL_TOOL_PAGES.map((tool) => `tools/${tool.slug}`),
+    "guides",
+    ...EMAIL_GUIDE_PAGES.map((guide) => `guides/${guide.slug}`),
   ]
 
   return i18n.locales.flatMap((locale) =>

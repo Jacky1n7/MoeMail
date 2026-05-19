@@ -51,3 +51,23 @@ export const EMAIL_TOOL_PAGES = [
 ] as const
 
 export type EmailToolPageSlug = (typeof EMAIL_TOOL_PAGES)[number]["slug"]
+
+export const EMAIL_GUIDE_PAGES = [
+  {
+    slug: "how-to-read-email-headers",
+  },
+  {
+    slug: "how-to-fix-spf-fail",
+  },
+  {
+    slug: "what-is-dkim-selector",
+  },
+  {
+    slug: "dmarc-policy-guide",
+  },
+  {
+    slug: "why-email-goes-to-spam",
+  },
+] as const
+
+export type EmailGuidePageSlug = (typeof EMAIL_GUIDE_PAGES)[number]["slug"]

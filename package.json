@@ -15,6 +15,7 @@
     "dev:cleanup": "wrangler dev --config wrangler.cleanup.json --test-scheduled",
     "test:cleanup": "curl http://localhost:8787/__scheduled",
     "test:email-tools": "tsx scripts/email-tools.test.ts",
+    "test:seo-content": "tsx scripts/seo-content.test.ts",
     "deploy:email": "wrangler deploy --config wrangler.email.json",
     "deploy:cleanup": "wrangler deploy --config wrangler.cleanup.json",
     "deploy:pages": "npm run build:pages && wrangler pages deploy --branch main"

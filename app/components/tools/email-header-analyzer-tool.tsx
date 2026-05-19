@@ -4,21 +4,8 @@ import { useMemo, useState } from "react"
 import { AlertTriangle, CheckCircle2, Info, MailSearch } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { parseEmailHeaders, type HeaderSignal } from "@/lib/email-tools"
+import type { EmailHeaderAnalyzerCopy } from "@/lib/seo-content"
 import { cn } from "@/lib/utils"
-
-const SAMPLE_HEADERS = `From: Example Sender <sender@example.com>
-To: You <you@example.net>
-Subject: Test message
-Date: Tue, 19 May 2026 10:00:02 +0000
-Message-ID: <abc123@example.com>
-Authentication-Results: mx.example.net;
- spf=pass smtp.mailfrom=example.com;
- dkim=pass header.d=example.com;
- dmarc=pass header.from=example.com
-Received: from mail.example.com by mx.example.net;
- Tue, 19 May 2026 10:00:00 +0000
-Received: from app.example.com by mail.example.com;
- Tue, 19 May 2026 09:59:58 +0000`
 
 function SignalIcon({ kind }: { kind: HeaderSignal["kind"] }) {
   if (kind === "good") {
@@ -50,15 +37,15 @@ function AuthBadge({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function EmailHeaderAnalyzerTool() {
-  const [rawHeaders, setRawHeaders] = useState(SAMPLE_HEADERS)
+export function EmailHeaderAnalyzerTool({ copy }: { copy: EmailHeaderAnalyzerCopy }) {
+  const [rawHeaders, setRawHeaders] = useState(copy.sampleHeaders)
   const parsed = useMemo(() => parseEmailHeaders(rawHeaders), [rawHeaders])
   const summary = [
-    ["From", parsed.summary.from],
-    ["To", parsed.summary.to],
-    ["Subject", parsed.summary.subject],
-    ["Date", parsed.summary.date],
-    ["Message-ID", parsed.summary.messageId],
+    [copy.summaryLabels.from, parsed.summary.from],
+    [copy.summaryLabels.to, parsed.summary.to],
+    [copy.summaryLabels.subject, parsed.summary.subject],
+    [copy.summaryLabels.date, parsed.summary.date],
+    [copy.summaryLabels.messageId, parsed.summary.messageId],
   ].filter(([, value]) => value)
 
   return (
@@ -66,15 +53,15 @@ export function EmailHeaderAnalyzerTool() {
       <div className="space-y-5">
         <div className="flex items-center gap-2 text-sm font-medium text-primary">
           <MailSearch className="h-4 w-4" />
-          Header analyzer
+          {copy.title}
         </div>
 
         <Textarea
           value={rawHeaders}
           onChange={(event) => setRawHeaders(event.target.value)}
           className="min-h-64 resize-y font-mono text-sm leading-6"
-          placeholder="Paste raw email headers here"
-          aria-label="Raw email headers"
+          placeholder={copy.placeholder}
+          aria-label={copy.rawHeadersLabel}
         />
 
         <div className="grid gap-3 sm:grid-cols-3">
@@ -98,20 +85,24 @@ export function EmailHeaderAnalyzerTool() {
         )}
 
         <div className="grid gap-3 md:grid-cols-2">
-          {parsed.signals.map((signal) => (
-            <div key={`${signal.label}-${signal.kind}`} className="rounded-md border border-gray-200 p-3 dark:border-gray-800">
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">
-                <SignalIcon kind={signal.kind} />
-                {signal.label}
+          {parsed.signals.map((signal) => {
+            const localizedSignal = copy.signals[signal.label] || signal
+
+            return (
+              <div key={`${signal.label}-${signal.kind}`} className="rounded-md border border-gray-200 p-3 dark:border-gray-800">
+                <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">
+                  <SignalIcon kind={signal.kind} />
+                  {localizedSignal.label}
+                </div>
+                <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{localizedSignal.description}</p>
               </div>
-              <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{signal.description}</p>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         {parsed.received.length > 0 && (
           <div className="space-y-3">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white">Received path</h2>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">{copy.receivedPath}</h2>
             <div className="space-y-2">
               {parsed.received.map((hop, index) => (
                 <code

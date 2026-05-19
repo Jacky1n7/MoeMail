@@ -6,65 +6,19 @@ import { EmailHeaderAnalyzerTool } from "@/components/tools/email-header-analyze
 import { Header } from "@/components/layout/header"
 import { EMAIL_TOOL_PAGES, type EmailToolPageSlug, SITE_NAME, SITE_URL } from "@/config/site"
 import { i18n, type Locale } from "@/i18n/config"
+import {
+  createFaqJsonLd,
+  createSoftwareApplicationJsonLd,
+  getEmailToolContent,
+  getLanguageAlternates,
+} from "@/lib/seo-content"
 
 export const runtime = "edge"
 
-const TOOL_CONTENT: Record<EmailToolPageSlug, {
-  mode: "mx" | "spf" | "dmarc" | "dkim" | "header"
-  heading: string
-  body: string[]
-}> = {
-  "mx-lookup": {
-    mode: "mx",
-    heading: "When MX records matter",
-    body: [
-      "MX records tell the internet which servers accept mail for a domain. Broken or missing MX records can stop incoming mail completely.",
-      "Use this when setting up a custom domain, moving mail providers, debugging verification emails, or checking whether a domain can receive mail.",
-    ],
-  },
-  "spf-checker": {
-    mode: "spf",
-    heading: "What SPF protects",
-    body: [
-      "SPF lists the servers and services allowed to send mail for a domain. It helps receiving mail systems detect spoofed senders.",
-      "A clean SPF record is especially important for transactional email, newsletters, and services that send account verification messages.",
-    ],
-  },
-  "dmarc-checker": {
-    mode: "dmarc",
-    heading: "Why DMARC is useful",
-    body: [
-      "DMARC tells receivers how to handle messages that fail SPF or DKIM checks. It can also send reports about authentication results.",
-      "Start with monitoring, then tighten policy once legitimate senders are aligned.",
-    ],
-  },
-  "dkim-checker": {
-    mode: "dkim",
-    heading: "How DKIM selectors work",
-    body: [
-      "DKIM records are TXT records under selector._domainkey.example.com. The selector is chosen by the sending service.",
-      "Check DKIM when setting up a mail provider, debugging authentication failures, or rotating signing keys.",
-    ],
-  },
-  "email-header-analyzer": {
-    mode: "header",
-    heading: "What headers can reveal",
-    body: [
-      "Email headers show sender metadata, routing hops, authentication results, and identifiers that help explain how a message reached an inbox.",
-      "They are useful for debugging delivery, investigating spoofing, and checking whether SPF, DKIM, and DMARC passed.",
-    ],
-  },
-}
-
-function getTool(slug: string) {
+function isEmailToolSlug(slug: string): slug is EmailToolPageSlug {
   const meta = EMAIL_TOOL_PAGES.find((tool) => tool.slug === slug)
-  const content = TOOL_CONTENT[slug as EmailToolPageSlug]
 
-  if (!meta || !content) {
-    return null
-  }
-
-  return { ...meta, ...content }
+  return Boolean(meta)
 }
 
 export async function generateMetadata({
@@ -73,11 +27,11 @@ export async function generateMetadata({
   params: Promise<{ locale: string; tool: string }>
 }): Promise<Metadata> {
   const { locale, tool: slug } = await params
-  const tool = getTool(slug)
-
-  if (!tool) {
+  if (!isEmailToolSlug(slug) || !i18n.locales.includes(locale as Locale)) {
     return {}
   }
+
+  const tool = getEmailToolContent(locale as Locale, slug)
 
   const canonical = `${SITE_URL}/${locale}/tools/${slug}`
 
@@ -86,6 +40,7 @@ export async function generateMetadata({
     description: tool.description,
     alternates: {
       canonical,
+      languages: getLanguageAlternates(`tools/${slug}`),
     },
     openGraph: {
       type: "website",
@@ -108,13 +63,17 @@ export default async function ToolPage({
   params: Promise<{ locale: string; tool: string }>
 }) {
   const { locale: localeFromParams, tool: slug } = await params
-  const tool = getTool(slug)
 
-  if (!tool || !i18n.locales.includes(localeFromParams as Locale)) {
+  if (!isEmailToolSlug(slug) || !i18n.locales.includes(localeFromParams as Locale)) {
     notFound()
   }
 
   const locale = localeFromParams as Locale
+  const tool = getEmailToolContent(locale, slug)
+  const jsonLd = [
+    createSoftwareApplicationJsonLd(tool, locale, `tools/${slug}`),
+    createFaqJsonLd(tool.faq),
+  ]
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
@@ -129,7 +88,7 @@ export default async function ToolPage({
                 </Link>
                 <span className="text-gray-400">/</span>
                 <Link href={`/${locale}/tools`} className="text-primary hover:underline">
-                  Email Tools
+                  {tool.breadcrumb}
                 </Link>
               </div>
               <h1 className="text-3xl md:text-5xl font-bold tracking-normal text-gray-950 dark:text-white">
@@ -141,24 +100,44 @@ export default async function ToolPage({
             </section>
 
             {tool.mode === "header" ? (
-              <EmailHeaderAnalyzerTool />
+              <EmailHeaderAnalyzerTool copy={tool.headerCopy} />
             ) : (
-              <DnsLookupTool defaultMode={tool.mode} />
+              <DnsLookupTool copy={tool.toolCopy} defaultMode={tool.mode} />
             )}
 
-            <section className="space-y-3">
+            {tool.sections.map((section) => (
+              <section key={section.heading} className="space-y-3">
+                <h2 className="text-xl md:text-2xl font-semibold tracking-normal text-gray-900 dark:text-white">
+                  {section.heading}
+                </h2>
+                {section.body.map((paragraph) => (
+                  <p key={paragraph} className="leading-7 text-gray-700 dark:text-gray-300">
+                    {paragraph}
+                  </p>
+                ))}
+              </section>
+            ))}
+
+            <section className="space-y-4">
               <h2 className="text-xl md:text-2xl font-semibold tracking-normal text-gray-900 dark:text-white">
-                {tool.heading}
+                FAQ
               </h2>
-              {tool.body.map((paragraph) => (
-                <p key={paragraph} className="leading-7 text-gray-700 dark:text-gray-300">
-                  {paragraph}
-                </p>
-              ))}
+              <div className="grid gap-3 md:grid-cols-2">
+                {tool.faq.map((item) => (
+                  <div key={item.question} className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-950">
+                    <h3 className="font-medium text-gray-950 dark:text-white">{item.question}</h3>
+                    <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{item.answer}</p>
+                  </div>
+                ))}
+              </div>
             </section>
           </div>
         </main>
       </div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     </div>
   )
 }

@@ -11,6 +11,7 @@ import {
   type DnsRecord,
   type DnsToolMode,
 } from "@/lib/email-tools"
+import type { DnsLookupToolCopy } from "@/lib/seo-content"
 import { cn } from "@/lib/utils"
 
 type CloudflareDnsAnswer = {
@@ -33,44 +34,22 @@ const DNS_TYPE_CODES: Record<number, DnsRecord["type"]> = {
   16: "TXT",
 }
 
-const MODES: Array<{
-  id: DnsToolMode
-  label: string
-  title: string
-  hint: string
-  icon: typeof MailCheck
-}> = [
-  {
-    id: "mx",
-    label: "MX",
-    title: "MX records",
-    hint: "Shows which mail servers receive email for this domain.",
-    icon: MailCheck,
-  },
-  {
-    id: "spf",
-    label: "SPF",
-    title: "SPF policy",
-    hint: "Finds the v=spf1 TXT record used for sender authorization.",
-    icon: ShieldCheck,
-  },
-  {
-    id: "dmarc",
-    label: "DMARC",
-    title: "DMARC policy",
-    hint: "Checks the _dmarc TXT record used for authentication policy.",
-    icon: CheckCircle2,
-  },
-  {
-    id: "dkim",
-    label: "DKIM",
-    title: "DKIM key",
-    hint: "Checks a selector._domainkey TXT record for a DKIM public key.",
-    icon: KeyRound,
-  },
-]
+const MODE_ORDER: DnsToolMode[] = ["mx", "spf", "dmarc", "dkim"]
 
-export function DnsLookupTool({ defaultMode = "mx" }: { defaultMode?: DnsToolMode }) {
+const MODE_ICONS: Record<DnsToolMode, typeof MailCheck> = {
+  mx: MailCheck,
+  spf: ShieldCheck,
+  dmarc: CheckCircle2,
+  dkim: KeyRound,
+}
+
+export function DnsLookupTool({
+  copy,
+  defaultMode = "mx",
+}: {
+  copy: DnsLookupToolCopy
+  defaultMode?: DnsToolMode
+}) {
   const [mode, setMode] = useState<DnsToolMode>(defaultMode)
   const [domain, setDomain] = useState("7752177.xyz")
   const [selector, setSelector] = useState("default")
@@ -78,7 +57,7 @@ export function DnsLookupTool({ defaultMode = "mx" }: { defaultMode?: DnsToolMod
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const currentMode = useMemo(() => MODES.find((item) => item.id === mode) || MODES[0], [mode])
+  const currentMode = useMemo(() => copy.modes[mode] || copy.modes.mx, [copy.modes, mode])
   const visibleRecords = useMemo(
     () => filterDnsRecords(mode, result?.records || []),
     [mode, result?.records]
@@ -90,7 +69,7 @@ export function DnsLookupTool({ defaultMode = "mx" }: { defaultMode?: DnsToolMod
     const query = buildDnsLookupQuery(mode, domain, selector)
 
     if (!query.domain || !query.domain.includes(".")) {
-      setError("Enter a domain such as example.com.")
+      setError(copy.invalidDomain)
       setResult(null)
       return
     }
@@ -110,7 +89,7 @@ export function DnsLookupTool({ defaultMode = "mx" }: { defaultMode?: DnsToolMod
       })
 
       if (!response.ok) {
-        setError("DNS resolver request failed.")
+        setError(copy.resolverFailed)
         setResult(null)
         return
       }
@@ -135,14 +114,20 @@ export function DnsLookupTool({ defaultMode = "mx" }: { defaultMode?: DnsToolMod
         records,
       })
     } catch {
-      setError("Lookup failed. Check the domain and try again.")
+      setError(copy.lookupFailed)
       setResult(null)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const Icon = currentMode.icon
+  const Icon = MODE_ICONS[mode]
+  const resultLabel =
+    visibleRecords.length === 0
+      ? copy.noRecords
+      : visibleRecords.length === 1
+        ? copy.recordFound
+        : copy.recordsFound.replace("{count}", String(visibleRecords.length))
 
   return (
     <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-950 sm:p-6">
@@ -159,23 +144,23 @@ export function DnsLookupTool({ defaultMode = "mx" }: { defaultMode?: DnsToolMod
           </div>
 
           <div className="grid grid-cols-4 rounded-md border border-gray-200 p-1 dark:border-gray-800">
-            {MODES.map((item) => (
+            {MODE_ORDER.map((modeId) => (
               <button
-                key={item.id}
+                key={modeId}
                 type="button"
                 onClick={() => {
-                  setMode(item.id)
+                  setMode(modeId)
                   setResult(null)
                   setError(null)
                 }}
                 className={cn(
                   "h-8 min-w-16 rounded-sm px-3 text-sm font-medium transition-colors",
-                  mode === item.id
+                  mode === modeId
                     ? "bg-primary text-primary-foreground"
                     : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-900"
                 )}
               >
-                {item.label}
+                {copy.modes[modeId].label}
               </button>
             ))}
           </div>
@@ -187,7 +172,7 @@ export function DnsLookupTool({ defaultMode = "mx" }: { defaultMode?: DnsToolMod
               value={domain}
               onChange={(event) => setDomain(event.target.value)}
               placeholder="example.com"
-              aria-label="Domain"
+              aria-label={copy.domainLabel}
               className="h-10"
             />
             {mode === "dkim" && (
@@ -195,14 +180,14 @@ export function DnsLookupTool({ defaultMode = "mx" }: { defaultMode?: DnsToolMod
                 value={selector}
                 onChange={(event) => setSelector(event.target.value)}
                 placeholder="selector"
-                aria-label="DKIM selector"
+                aria-label={copy.selectorLabel}
                 className="h-10 sm:w-40"
               />
             )}
           </div>
           <Button type="submit" className="h-10 gap-2 sm:w-36" disabled={isLoading}>
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-            Lookup
+            {copy.lookup}
           </Button>
         </form>
 
@@ -217,18 +202,18 @@ export function DnsLookupTool({ defaultMode = "mx" }: { defaultMode?: DnsToolMod
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
               <span className="font-medium text-gray-900 dark:text-white">
-                {visibleRecords.length ? `${visibleRecords.length} record${visibleRecords.length === 1 ? "" : "s"} found` : "No matching records found"}
+                {resultLabel}
               </span>
               <span className="text-gray-500 dark:text-gray-400">
-                Query: {result.domain} / {result.type}
+                {copy.query}: {result.domain} / {result.type}
               </span>
             </div>
 
             {visibleRecords.length > 0 ? (
               <div className="overflow-hidden rounded-md border border-gray-200 dark:border-gray-800">
                 <div className="grid grid-cols-[1fr_auto] gap-3 bg-gray-50 px-3 py-2 text-xs font-medium uppercase text-gray-500 dark:bg-gray-900 dark:text-gray-400">
-                  <span>Value</span>
-                  <span>TTL</span>
+                  <span>{copy.value}</span>
+                  <span>{copy.ttl}</span>
                 </div>
                 {visibleRecords.map((record) => (
                   <div
@@ -244,7 +229,7 @@ export function DnsLookupTool({ defaultMode = "mx" }: { defaultMode?: DnsToolMod
               </div>
             ) : (
               <p className="rounded-md border border-gray-200 bg-gray-50 p-3 text-sm leading-6 text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
-                The domain resolved, but this checker did not find the expected record.
+                {copy.noRecordExplanation}
               </p>
             )}
           </div>
