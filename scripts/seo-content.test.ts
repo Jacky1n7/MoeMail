@@ -7,6 +7,8 @@ import {
   getEmailGuideContent,
   getEmailToolContent,
   getMarketingPageContent,
+  getSearchDescription,
+  getSearchTitle,
   getToolsIndexContent,
 } from "../app/lib/seo-content"
 
@@ -22,6 +24,8 @@ for (const locale of i18n.locales) {
   assert.ok(toolsIndex.title.length > 0, `${locale} tools index title is missing`)
   assert.ok(toolsIndex.description.length > 0, `${locale} tools index description is missing`)
   assert.equal(toolsIndex.breadcrumb, locale === "en" ? "Email Tools" : toolsIndex.breadcrumb)
+  assert.match(getSearchTitle(locale, "index", toolsIndex.title), /MoeMail/)
+  assert.notEqual(getSearchDescription(locale, "index", toolsIndex.description), toolsIndex.description)
 
   for (const tool of EMAIL_TOOL_PAGES) {
     const content = getEmailToolContent(locale, tool.slug)
@@ -31,6 +35,8 @@ for (const locale of i18n.locales) {
     assert.ok(content.sections.length >= 1, `${locale}/${tool.slug} sections are missing`)
     assert.ok(content.faq.length >= 2, `${locale}/${tool.slug} FAQ is missing`)
     assert.ok(content.toolCopy.lookup.length > 0, `${locale}/${tool.slug} lookup label is missing`)
+    assert.match(getSearchTitle(locale, "tool", content.title), /MoeMail/)
+    assert.notEqual(getSearchDescription(locale, "tool", content.description), content.description)
   }
 
   for (const guide of EMAIL_GUIDE_PAGES) {
@@ -41,6 +47,8 @@ for (const locale of i18n.locales) {
     assert.ok(content.sections.length >= 2, `${locale}/${guide.slug} needs useful sections`)
     assert.ok(content.relatedTools.length >= 1, `${locale}/${guide.slug} related tools are missing`)
     assert.ok(content.faq.length >= 2, `${locale}/${guide.slug} FAQ is missing`)
+    assert.match(getSearchTitle(locale, "guide", content.title), /MoeMail/)
+    assert.notEqual(getSearchDescription(locale, "guide", content.description), content.description)
   }
 
   for (const page of TRUST_AND_SEO_PAGES) {

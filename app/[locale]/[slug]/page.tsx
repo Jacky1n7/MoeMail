@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 import { Header } from "@/components/layout/header"
 import { i18n, type Locale } from "@/i18n/config"
 import { SITE_NAME, SITE_URL, TRUST_AND_SEO_PAGES, type TrustAndSeoPageSlug } from "@/config/site"
-import { getLanguageAlternates, getMarketingPageContent } from "@/lib/seo-content"
+import { getLanguageAlternates, getMarketingPageContent, getSearchDescription, getSearchTitle } from "@/lib/seo-content"
 
 export const runtime = "edge"
 
@@ -25,10 +25,12 @@ export async function generateMetadata({
 
   const page = getMarketingPageContent(locale as Locale, slug)
   const canonical = `${SITE_URL}/${locale}/${slug}`
+  const title = getSearchTitle(locale as Locale, "marketing", page.title)
+  const description = getSearchDescription(locale as Locale, "marketing", page.description)
 
   return {
-    title: `${page.title} | ${SITE_NAME}`,
-    description: page.description,
+    title,
+    description,
     alternates: {
       canonical,
       languages: getLanguageAlternates(slug),
@@ -36,14 +38,14 @@ export async function generateMetadata({
     openGraph: {
       type: "article",
       url: canonical,
-      title: `${page.title} | ${SITE_NAME}`,
-      description: page.description,
+      title,
+      description,
       siteName: SITE_NAME,
     },
     twitter: {
       card: "summary",
-      title: `${page.title} | ${SITE_NAME}`,
-      description: page.description,
+      title,
+      description,
     },
   }
 }

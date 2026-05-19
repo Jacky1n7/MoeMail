@@ -10,6 +10,8 @@ import {
   getEmailGuideContent,
   getEmailToolContent,
   getLanguageAlternates,
+  getSearchDescription,
+  getSearchTitle,
   getToolsIndexContent,
 } from "@/lib/seo-content"
 
@@ -32,10 +34,12 @@ export async function generateMetadata({
 
   const content = getEmailGuideContent(locale as Locale, slug)
   const canonical = `${SITE_URL}/${locale}/guides/${slug}`
+  const title = getSearchTitle(locale as Locale, "guide", content.title)
+  const description = getSearchDescription(locale as Locale, "guide", content.description)
 
   return {
-    title: `${content.title} | ${SITE_NAME}`,
-    description: content.description,
+    title,
+    description,
     alternates: {
       canonical,
       languages: getLanguageAlternates(`guides/${slug}`),
@@ -43,14 +47,14 @@ export async function generateMetadata({
     openGraph: {
       type: "article",
       url: canonical,
-      title: `${content.title} | ${SITE_NAME}`,
-      description: content.description,
+      title,
+      description,
       siteName: SITE_NAME,
     },
     twitter: {
       card: "summary",
-      title: `${content.title} | ${SITE_NAME}`,
-      description: content.description,
+      title,
+      description,
     },
   }
 }

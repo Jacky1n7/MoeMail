@@ -11,6 +11,8 @@ import {
   createSoftwareApplicationJsonLd,
   getEmailToolContent,
   getLanguageAlternates,
+  getSearchDescription,
+  getSearchTitle,
 } from "@/lib/seo-content"
 
 export const runtime = "edge"
@@ -32,12 +34,14 @@ export async function generateMetadata({
   }
 
   const tool = getEmailToolContent(locale as Locale, slug)
+  const title = getSearchTitle(locale as Locale, "tool", tool.title)
+  const description = getSearchDescription(locale as Locale, "tool", tool.description)
 
   const canonical = `${SITE_URL}/${locale}/tools/${slug}`
 
   return {
-    title: `${tool.title} | ${SITE_NAME}`,
-    description: tool.description,
+    title,
+    description,
     alternates: {
       canonical,
       languages: getLanguageAlternates(`tools/${slug}`),
@@ -45,14 +49,14 @@ export async function generateMetadata({
     openGraph: {
       type: "website",
       url: canonical,
-      title: `${tool.title} | ${SITE_NAME}`,
-      description: tool.description,
+      title,
+      description,
       siteName: SITE_NAME,
     },
     twitter: {
       card: "summary",
-      title: `${tool.title} | ${SITE_NAME}`,
-      description: tool.description,
+      title,
+      description,
     },
   }
 }

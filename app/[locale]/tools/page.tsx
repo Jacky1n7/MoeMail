@@ -4,7 +4,14 @@ import { ArrowRight, BookOpen, CheckCircle2, FileText, KeyRound, MailCheck, Shie
 import { Header } from "@/components/layout/header"
 import { EMAIL_GUIDE_PAGES, EMAIL_TOOL_PAGES, SITE_NAME, SITE_URL } from "@/config/site"
 import { i18n, type Locale } from "@/i18n/config"
-import { getEmailGuideContent, getEmailToolContent, getLanguageAlternates, getToolsIndexContent } from "@/lib/seo-content"
+import {
+  getEmailGuideContent,
+  getEmailToolContent,
+  getLanguageAlternates,
+  getSearchDescription,
+  getSearchTitle,
+  getToolsIndexContent,
+} from "@/lib/seo-content"
 
 export const runtime = "edge"
 
@@ -18,10 +25,12 @@ export async function generateMetadata({
   const { locale } = await params
   const canonical = `${SITE_URL}/${locale}/tools`
   const content = getToolsIndexContent(locale as Locale)
+  const title = getSearchTitle(locale as Locale, "index", content.title)
+  const description = getSearchDescription(locale as Locale, "index", content.description)
 
   return {
-    title: `${content.title} | ${SITE_NAME}`,
-    description: content.description,
+    title,
+    description,
     alternates: {
       canonical,
       languages: getLanguageAlternates("tools"),
@@ -29,8 +38,8 @@ export async function generateMetadata({
     openGraph: {
       type: "website",
       url: canonical,
-      title: `${content.title} | ${SITE_NAME}`,
-      description: content.description,
+      title,
+      description,
       siteName: SITE_NAME,
     },
   }

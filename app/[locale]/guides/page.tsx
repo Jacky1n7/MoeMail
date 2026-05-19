@@ -4,7 +4,7 @@ import { ArrowRight, BookOpen } from "lucide-react"
 import { Header } from "@/components/layout/header"
 import { EMAIL_GUIDE_PAGES, SITE_NAME, SITE_URL } from "@/config/site"
 import { i18n, type Locale } from "@/i18n/config"
-import { getEmailGuideContent, getLanguageAlternates, getToolsIndexContent } from "@/lib/seo-content"
+import { getEmailGuideContent, getLanguageAlternates, getSearchDescription, getSearchTitle, getToolsIndexContent } from "@/lib/seo-content"
 
 export const runtime = "edge"
 
@@ -17,10 +17,12 @@ export async function generateMetadata({
   const safeLocale = i18n.locales.includes(locale as Locale) ? locale as Locale : i18n.defaultLocale
   const content = getToolsIndexContent(safeLocale)
   const canonical = `${SITE_URL}/${safeLocale}/guides`
+  const title = getSearchTitle(safeLocale, "guide", content.guidesTitle)
+  const description = getSearchDescription(safeLocale, "guide", content.guidesDescription)
 
   return {
-    title: `${content.guidesTitle} | ${SITE_NAME}`,
-    description: content.guidesDescription,
+    title,
+    description,
     alternates: {
       canonical,
       languages: getLanguageAlternates("guides"),
@@ -28,8 +30,8 @@ export async function generateMetadata({
     openGraph: {
       type: "website",
       url: canonical,
-      title: `${content.guidesTitle} | ${SITE_NAME}`,
-      description: content.guidesDescription,
+      title,
+      description,
       siteName: SITE_NAME,
     },
   }

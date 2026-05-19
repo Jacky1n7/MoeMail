@@ -84,6 +84,69 @@ export type ToolsIndexContent = {
   guidesDescription: string
 }
 
+export type SearchMetadataKind = "tool" | "guide" | "marketing" | "index"
+
+const SEARCH_TITLE_SUFFIX: Record<Locale, Record<SearchMetadataKind, string>> = {
+  en: {
+    tool: "Free Email Tool",
+    guide: "Email Deliverability Guide",
+    marketing: "MoeMail",
+    index: "Free Email Tools",
+  },
+  "zh-CN": {
+    tool: "免费邮件工具",
+    guide: "邮件投递指南",
+    marketing: "MoeMail",
+    index: "免费邮件工具",
+  },
+  "zh-TW": {
+    tool: "免費郵件工具",
+    guide: "郵件投遞指南",
+    marketing: "MoeMail",
+    index: "免費郵件工具",
+  },
+  ja: {
+    tool: "無料メールツール",
+    guide: "メール配信ガイド",
+    marketing: "MoeMail",
+    index: "無料メールツール",
+  },
+  ko: {
+    tool: "무료 메일 도구",
+    guide: "메일 전달 가이드",
+    marketing: "MoeMail",
+    index: "무료 메일 도구",
+  },
+}
+
+const SEARCH_DESCRIPTION_PREFIX: Record<Locale, Partial<Record<SearchMetadataKind, string>>> = {
+  en: {
+    tool: "Free online checker.",
+    guide: "Practical guide.",
+    index: "Free online email tools.",
+  },
+  "zh-CN": {
+    tool: "免费在线检查工具。",
+    guide: "实用指南。",
+    index: "免费的在线邮件工具。",
+  },
+  "zh-TW": {
+    tool: "免費線上檢查工具。",
+    guide: "實用指南。",
+    index: "免費線上郵件工具。",
+  },
+  ja: {
+    tool: "無料のオンラインチェックツール。",
+    guide: "実用ガイド。",
+    index: "無料のオンラインメールツール。",
+  },
+  ko: {
+    tool: "무료 온라인 검사 도구.",
+    guide: "실용 가이드.",
+    index: "무료 온라인 메일 도구.",
+  },
+}
+
 const DEFAULT_LOCALE = i18n.defaultLocale
 
 const DNS_COPY: Record<Locale, DnsLookupToolCopy> = {
@@ -1981,6 +2044,26 @@ GUIDE_CONTENT.ko = {
 
 export function getToolsIndexContent(locale: Locale): ToolsIndexContent {
   return TOOLS_INDEX[locale] || TOOLS_INDEX[DEFAULT_LOCALE]
+}
+
+export function getSearchTitle(locale: Locale, kind: SearchMetadataKind, title: string): string {
+  const suffix = SEARCH_TITLE_SUFFIX[locale]?.[kind] || SEARCH_TITLE_SUFFIX[DEFAULT_LOCALE][kind]
+
+  if (kind === "marketing") {
+    return `${title} | ${suffix}`
+  }
+
+  return `${title} - ${suffix} | ${SITE_NAME}`
+}
+
+export function getSearchDescription(locale: Locale, kind: SearchMetadataKind, description: string): string {
+  const prefix = SEARCH_DESCRIPTION_PREFIX[locale]?.[kind]
+
+  if (!prefix || description.startsWith(prefix)) {
+    return description
+  }
+
+  return `${prefix} ${description}`
 }
 
 export function getEmailToolContent(locale: Locale, slug: EmailToolPageSlug): EmailToolContent {
