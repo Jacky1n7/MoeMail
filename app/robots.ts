@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next"
-import { SITE_URL } from "@/config/site"
+import { SITE_HOST, SITE_URL } from "@/config/site"
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -11,6 +11,6 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
+    host: SITE_HOST,
   }
 }
