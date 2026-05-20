@@ -5,6 +5,7 @@ import { ActionButton } from "@/components/home/action-button"
 import { FeatureCard } from "@/components/home/feature-card"
 import { AdSlot } from "@/components/monetization/ad-slot"
 import { MonetizationCards } from "@/components/monetization/monetization-cards"
+import { SiteFooter } from "@/components/layout/site-footer"
 import { getTranslations } from "next-intl/server"
 import type { Locale } from "@/i18n/config"
 import Link from "next/link"
@@ -17,6 +18,8 @@ const HOME_LINKS = [
   ["guides", "guides"],
   ["api", "temporary-email-api"],
   ["emailTesting", "email-testing"],
+  ["about", "about"],
+  ["advertise", "advertise"],
   ["privacy", "privacy"],
   ["terms", "terms"],
   ["contact", "contact"],
@@ -94,6 +97,7 @@ export default async function Home({
             </div>
           </div>
         </main>
+        <SiteFooter locale={locale} />
       </div>
     </div>
   )

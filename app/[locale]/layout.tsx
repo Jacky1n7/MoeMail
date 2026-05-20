@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/theme/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { cn } from "@/lib/utils"
 import { SITE_NAME, SITE_URL } from "@/config/site"
+import { ADSENSE_CLIENT, getAdSensePublisherId } from "@/lib/monetization"
 import { zpix } from "../fonts"
 import "../globals.css"
 import { Providers } from "../providers"
@@ -109,6 +110,7 @@ export default async function LocaleLayout({
   }
 
   const messages = await getMessages(locale)
+  const adsensePublisherId = getAdSensePublisherId(ADSENSE_CLIENT)
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -119,6 +121,16 @@ export default async function LocaleLayout({
         <meta name="apple-mobile-web-app-title" content="MoeMail" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
+        {adsensePublisherId && (
+          <>
+            <meta name="google-adsense-account" content={ADSENSE_CLIENT} />
+            <script
+              async
+              src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+              crossOrigin="anonymous"
+            />
+          </>
+        )}
       </head>
       <body 
         className={cn(

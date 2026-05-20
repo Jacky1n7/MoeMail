@@ -2,6 +2,7 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { ArrowRight, BookOpen } from "lucide-react"
 import { Header } from "@/components/layout/header"
+import { SiteFooter } from "@/components/layout/site-footer"
 import { EMAIL_GUIDE_PAGES, SITE_NAME, SITE_URL } from "@/config/site"
 import { i18n, type Locale } from "@/i18n/config"
 import { getEmailGuideContent, getLanguageAlternates, getSearchDescription, getSearchTitle, getToolsIndexContent } from "@/lib/seo-content"
@@ -90,6 +91,7 @@ export default async function GuidesPage({
             </section>
           </div>
         </main>
+        <SiteFooter locale={locale} />
       </div>
     </div>
   )

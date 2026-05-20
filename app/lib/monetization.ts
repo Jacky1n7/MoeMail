@@ -7,7 +7,9 @@ export type MonetizationCard = {
   label: string
 }
 
-export const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || ""
+export const DEFAULT_ADSENSE_CLIENT = "ca-pub-2544061304155027"
+
+export const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || DEFAULT_ADSENSE_CLIENT
 
 export const AD_PLACEMENTS: Record<MonetizationPlacement, string> = {
   home: process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME || "",

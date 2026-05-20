@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { ArrowRight } from "lucide-react"
 import { Header } from "@/components/layout/header"
+import { SiteFooter } from "@/components/layout/site-footer"
 import { AdSlot } from "@/components/monetization/ad-slot"
 import { MonetizationCards } from "@/components/monetization/monetization-cards"
 import { EMAIL_GUIDE_PAGES, SITE_NAME, SITE_URL, type EmailGuidePageSlug } from "@/config/site"
@@ -161,6 +162,7 @@ export default async function GuidePage({
             </section>
           </article>
         </main>
+        <SiteFooter locale={locale} />
       </div>
       <script
         type="application/ld+json"

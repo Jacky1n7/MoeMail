@@ -2,6 +2,7 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { ArrowRight, BookOpen, CheckCircle2, FileCog, FileText, HeartPulse, KeyRound, MailCheck, ShieldAlert, ShieldCheck } from "lucide-react"
 import { Header } from "@/components/layout/header"
+import { SiteFooter } from "@/components/layout/site-footer"
 import { EMAIL_GUIDE_PAGES, EMAIL_TOOL_PAGES, SITE_NAME, SITE_URL } from "@/config/site"
 import { i18n, type Locale } from "@/i18n/config"
 import {
@@ -136,6 +137,7 @@ export default async function ToolsPage({
             </section>
           </div>
         </main>
+        <SiteFooter locale={locale as Locale} />
       </div>
     </div>
   )

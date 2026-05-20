@@ -100,6 +100,37 @@ const CONTENT: Record<Locale, Record<TrustAndSeoPageSlug, Omit<MarketingPageCont
         href: "/",
       },
     },
+    advertise: {
+      title: "Advertise and Sponsorship",
+      description: "Partner with MoeMail to reach people who care about email privacy, DNS health, deliverability, and developer email testing.",
+      sections: [
+        {
+          heading: "Audience",
+          body: [
+            "MoeMail attracts users who need disposable inboxes, email privacy guidance, DNS troubleshooting tools, and practical deliverability education.",
+            "The site is useful for developers, indie builders, domain owners, small businesses, and privacy-conscious users who want a cleaner email workflow.",
+          ],
+        },
+        {
+          heading: "Suitable partners",
+          body: [
+            "Relevant partners include email service providers, domain registrars, DNS platforms, privacy tools, deliverability products, hosting providers, and developer SaaS tools.",
+            "We prefer useful, clearly labeled placements that do not interrupt the mailbox experience or mislead visitors.",
+          ],
+        },
+        {
+          heading: "Ad placement principles",
+          body: [
+            "Advertising is intended for public content pages such as guides, tools, and educational resources.",
+            "We avoid placing ads inside private message views or areas where visitors are reading mailbox content.",
+          ],
+        },
+      ],
+      cta: {
+        label: "Contact us",
+        href: "/contact",
+      },
+    },
     "temporary-email": {
       title: "Temporary Email",
       description: "Create a temporary email address to receive verification codes, test signups, and keep your personal inbox private.",
@@ -308,6 +339,37 @@ const CONTENT: Record<Locale, Record<TrustAndSeoPageSlug, Omit<MarketingPageCont
       cta: {
         label: "打开 MoeMail",
         href: "/",
+      },
+    },
+    advertise: {
+      title: "广告与赞助合作",
+      description: "与 MoeMail 合作，触达关注邮件隐私、DNS 健康、邮件投递和开发者邮件测试的人群。",
+      sections: [
+        {
+          heading: "网站受众",
+          body: [
+            "MoeMail 的访问者通常需要临时收件箱、邮件隐私建议、DNS 排查工具和实用的邮件投递知识。",
+            "这个网站适合开发者、独立产品作者、域名持有者、小型企业，以及希望更干净管理邮箱流程的隐私用户。",
+          ],
+        },
+        {
+          heading: "适合的合作方",
+          body: [
+            "适合的合作方向包括邮件服务商、域名注册商、DNS 平台、隐私工具、邮件投递产品、主机服务商和开发者 SaaS 工具。",
+            "我们更倾向有用且清晰标注的展示方式，不打断收件箱体验，也不误导访问者点击。",
+          ],
+        },
+        {
+          heading: "广告展示原则",
+          body: [
+            "广告优先放在指南、工具和公开教育内容页面。",
+            "我们避免在私人邮件内容、邮件详情或用户正在阅读收件箱内容的位置展示广告。",
+          ],
+        },
+      ],
+      cta: {
+        label: "联系我们",
+        href: "/contact",
       },
     },
     "temporary-email": {
@@ -525,6 +587,37 @@ CONTENT["zh-TW"] = {
       href: "/",
     },
   },
+  advertise: {
+    title: "廣告與贊助合作",
+    description: "與 MoeMail 合作，觸達關注郵件隱私、DNS 健康、郵件投遞和開發者郵件測試的人群。",
+    sections: [
+      {
+        heading: "網站受眾",
+        body: [
+          "MoeMail 的訪客通常需要臨時收件匣、郵件隱私建議、DNS 排查工具和實用的郵件投遞知識。",
+          "這個網站適合開發者、獨立產品作者、網域持有者、小型企業，以及希望更乾淨管理信箱流程的隱私使用者。",
+        ],
+      },
+      {
+        heading: "適合的合作方",
+        body: [
+          "適合的合作方向包括郵件服務商、網域註冊商、DNS 平台、隱私工具、郵件投遞產品、主機服務商和開發者 SaaS 工具。",
+          "我們更傾向有用且清楚標示的展示方式，不打斷收件匣體驗，也不誤導訪客點擊。",
+        ],
+      },
+      {
+        heading: "廣告展示原則",
+        body: [
+          "廣告優先放在指南、工具和公開教育內容頁面。",
+          "我們避免在私人郵件內容、郵件詳情或使用者正在閱讀收件匣內容的位置展示廣告。",
+        ],
+      },
+    ],
+    cta: {
+      label: "聯絡我們",
+      href: "/contact",
+    },
+  },
   "temporary-email": {
     title: "臨時信箱",
     description: "建立臨時信箱來接收驗證碼、測試註冊流程，並保護你的個人信箱。",
@@ -736,6 +829,37 @@ CONTENT.ja = {
       href: "/",
     },
   },
+  advertise: {
+    title: "広告掲載とスポンサーシップ",
+    description: "メールプライバシー、DNS 健全性、配信到達性、開発者向けメールテストに関心のあるユーザーへ届けます。",
+    sections: [
+      {
+        heading: "オーディエンス",
+        body: [
+          "MoeMail の訪問者は、一時受信箱、メールプライバシーの知識、DNS トラブルシューティング、実用的な配信ガイドを求めています。",
+          "開発者、個人開発者、ドメイン所有者、小規模事業者、メール運用を整理したいプライバシー重視のユーザーに役立ちます。",
+        ],
+      },
+      {
+        heading: "相性のよいパートナー",
+        body: [
+          "メールサービス、ドメイン登録、DNS プラットフォーム、プライバシーツール、配信改善サービス、ホスティング、開発者向け SaaS と相性があります。",
+          "訪問者を誤解させず、メールボックス体験を妨げない、明確に表示された有用な掲載を優先します。",
+        ],
+      },
+      {
+        heading: "広告掲載の考え方",
+        body: [
+          "広告はガイド、ツール、教育コンテンツなどの公開ページを中心に掲載します。",
+          "個人のメール本文、メッセージ詳細、受信箱の閲覧中に広告を置くことは避けます。",
+        ],
+      },
+    ],
+    cta: {
+      label: "問い合わせる",
+      href: "/contact",
+    },
+  },
   "temporary-email": {
     title: "一時メール",
     description: "確認コードの受信、登録フローのテスト、個人メールの保護に使える一時メールアドレスを作成します。",
@@ -945,6 +1069,37 @@ CONTENT.ko = {
     cta: {
       label: "MoeMail 열기",
       href: "/",
+    },
+  },
+  advertise: {
+    title: "광고 및 스폰서십",
+    description: "이메일 개인정보 보호, DNS 상태, 전달성, 개발자 메일 테스트에 관심 있는 사용자에게 다가가세요.",
+    sections: [
+      {
+        heading: "방문자",
+        body: [
+          "MoeMail 방문자는 임시 받은편지함, 이메일 개인정보 보호 안내, DNS 문제 해결 도구, 실용적인 메일 전달 지식을 찾습니다.",
+          "개발자, 인디 빌더, 도메인 소유자, 소규모 비즈니스, 더 깔끔한 이메일 흐름을 원하는 개인정보 중심 사용자에게 유용합니다.",
+        ],
+      },
+      {
+        heading: "적합한 파트너",
+        body: [
+          "메일 서비스 제공업체, 도메인 등록기관, DNS 플랫폼, 개인정보 보호 도구, 전달성 제품, 호스팅 제공업체, 개발자 SaaS 도구와 잘 맞습니다.",
+          "방문자를 오도하지 않고 메일함 경험을 방해하지 않는, 명확하게 표시된 유용한 배치를 선호합니다.",
+        ],
+      },
+      {
+        heading: "광고 배치 원칙",
+        body: [
+          "광고는 가이드, 도구, 교육 콘텐츠 같은 공개 페이지를 중심으로 배치합니다.",
+          "개인 메시지 보기, 메일 상세, 사용자가 받은편지함 내용을 읽는 영역에는 광고 배치를 피합니다.",
+        ],
+      },
+    ],
+    cta: {
+      label: "문의하기",
+      href: "/contact",
     },
   },
   "temporary-email": {

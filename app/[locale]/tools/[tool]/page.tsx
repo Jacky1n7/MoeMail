@@ -9,6 +9,7 @@ import { EmailRecordGeneratorTool } from "@/components/tools/email-record-genera
 import { AdSlot } from "@/components/monetization/ad-slot"
 import { MonetizationCards } from "@/components/monetization/monetization-cards"
 import { Header } from "@/components/layout/header"
+import { SiteFooter } from "@/components/layout/site-footer"
 import { EMAIL_TOOL_PAGES, type EmailToolPageSlug, SITE_NAME, SITE_URL } from "@/config/site"
 import { i18n, type Locale } from "@/i18n/config"
 import {
@@ -177,6 +178,7 @@ export default async function ToolPage({
             </section>
           </div>
         </main>
+        <SiteFooter locale={locale} />
       </div>
       <script
         type="application/ld+json"

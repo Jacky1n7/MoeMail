@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { Header } from "@/components/layout/header"
+import { SiteFooter } from "@/components/layout/site-footer"
 import { i18n, type Locale } from "@/i18n/config"
 import { SITE_NAME, SITE_URL, TRUST_AND_SEO_PAGES, type TrustAndSeoPageSlug } from "@/config/site"
 import { getLanguageAlternates, getMarketingPageContent, getSearchDescription, getSearchTitle } from "@/lib/seo-content"
@@ -112,6 +113,7 @@ export default async function MarketingPage({
             )}
           </article>
         </main>
+        <SiteFooter locale={locale} />
       </div>
     </div>
   )

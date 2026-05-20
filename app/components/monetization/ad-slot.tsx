@@ -17,13 +17,6 @@ export function AdSlot({
 
   return (
     <div className={cn("overflow-hidden rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-950", className)}>
-      <Script
-        id="adsense-script"
-        async
-        strategy="afterInteractive"
-        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-        crossOrigin="anonymous"
-      />
       <ins
         className="adsbygoogle"
         style={{ display: "block" }}

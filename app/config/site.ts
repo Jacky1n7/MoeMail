@@ -16,6 +16,7 @@ export const TRUST_AND_SEO_PAGES = [
   "privacy",
   "terms",
   "contact",
+  "advertise",
   "temporary-email",
   "disposable-email",
   "temporary-email-api",
