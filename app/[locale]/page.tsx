@@ -8,22 +8,8 @@ import { MonetizationCards } from "@/components/monetization/monetization-cards"
 import { SiteFooter } from "@/components/layout/site-footer"
 import { getTranslations } from "next-intl/server"
 import type { Locale } from "@/i18n/config"
-import Link from "next/link"
 
 export const runtime = "edge"
-
-const HOME_LINKS = [
-  ["temporaryEmail", "temporary-email"],
-  ["tools", "tools"],
-  ["guides", "guides"],
-  ["api", "temporary-email-api"],
-  ["emailTesting", "email-testing"],
-  ["about", "about"],
-  ["advertise", "advertise"],
-  ["privacy", "privacy"],
-  ["terms", "terms"],
-  ["contact", "contact"],
-] as const
 
 export default async function Home({
   params,
@@ -81,14 +67,6 @@ export default async function Home({
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 px-2 sm:px-0">
                 <ActionButton isLoggedIn={!!session} />
               </div>
-
-              <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-2 text-xs text-gray-500 dark:text-gray-400">
-                {HOME_LINKS.map(([labelKey, href]) => (
-                  <Link key={href} href={`/${locale}/${href}`} className="hover:text-primary hover:underline">
-                    {t(`links.${labelKey}`)}
-                  </Link>
-                ))}
-              </nav>
 
               <div className="mx-auto w-full max-w-3xl space-y-4 pt-2 text-left">
                 <AdSlot placement="home" />
