@@ -25,6 +25,8 @@
   },
   "links": {
     "temporaryEmail": "临时邮箱",
+    "tools": "邮件工具",
+    "guides": "邮件指南",
     "api": "API",
     "emailTesting": "邮件测试",
     "privacy": "隐私",

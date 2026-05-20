@@ -11,6 +11,8 @@ export const runtime = "edge"
 
 const HOME_LINKS = [
   ["temporaryEmail", "temporary-email"],
+  ["tools", "tools"],
+  ["guides", "guides"],
   ["api", "temporary-email-api"],
   ["emailTesting", "email-testing"],
   ["privacy", "privacy"],

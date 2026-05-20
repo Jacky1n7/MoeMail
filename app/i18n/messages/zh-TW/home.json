@@ -25,6 +25,8 @@
   },
   "links": {
     "temporaryEmail": "臨時信箱",
+    "tools": "郵件工具",
+    "guides": "郵件指南",
     "api": "API",
     "emailTesting": "郵件測試",
     "privacy": "隱私",

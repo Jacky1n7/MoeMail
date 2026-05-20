@@ -25,6 +25,8 @@
   },
   "links": {
     "temporaryEmail": "Temporary Email",
+    "tools": "Email Tools",
+    "guides": "Guides",
     "api": "API",
     "emailTesting": "Email Testing",
     "privacy": "Privacy",

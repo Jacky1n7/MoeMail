@@ -25,6 +25,8 @@
   },
   "links": {
     "temporaryEmail": "一時メール",
+    "tools": "メールツール",
+    "guides": "ガイド",
     "api": "API",
     "emailTesting": "メールテスト",
     "privacy": "プライバシー",

@@ -25,6 +25,8 @@
   },
   "links": {
     "temporaryEmail": "임시 이메일",
+    "tools": "메일 도구",
+    "guides": "가이드",
     "api": "API",
     "emailTesting": "메일 테스트",
     "privacy": "개인정보",

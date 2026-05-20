@@ -19,6 +19,8 @@ for (const locale of i18n.locales) {
   }
   assert.ok(homeMessages.links, `${locale} home links are missing`)
   assert.ok(homeMessages.links?.temporaryEmail, `${locale} temporary email home link is missing`)
+  assert.ok(homeMessages.links?.tools, `${locale} tools home link is missing`)
+  assert.ok(homeMessages.links?.guides, `${locale} guides home link is missing`)
   assert.ok(homeMessages.links?.emailTesting, `${locale} email testing home link is missing`)
 
   const toolsIndex = getToolsIndexContent(locale)
