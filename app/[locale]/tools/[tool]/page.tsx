@@ -6,6 +6,8 @@ import { DnsLookupTool } from "@/components/tools/dns-lookup-tool"
 import { EmailHealthCheckTool } from "@/components/tools/email-health-check-tool"
 import { EmailHeaderAnalyzerTool } from "@/components/tools/email-header-analyzer-tool"
 import { EmailRecordGeneratorTool } from "@/components/tools/email-record-generator-tool"
+import { AdSlot } from "@/components/monetization/ad-slot"
+import { MonetizationCards } from "@/components/monetization/monetization-cards"
 import { Header } from "@/components/layout/header"
 import { EMAIL_TOOL_PAGES, type EmailToolPageSlug, SITE_NAME, SITE_URL } from "@/config/site"
 import { i18n, type Locale } from "@/i18n/config"
@@ -121,6 +123,8 @@ export default async function ToolPage({
               <DnsLookupTool copy={tool.toolCopy} defaultMode={tool.mode} />
             )}
 
+            <AdSlot placement="tool" />
+
             {tool.sections.map((section) => (
               <section key={section.heading} className="space-y-3">
                 <h2 className="text-xl md:text-2xl font-semibold tracking-normal text-gray-900 dark:text-white">
@@ -133,6 +137,8 @@ export default async function ToolPage({
                 ))}
               </section>
             ))}
+
+            <MonetizationCards placement="tool" locale={locale} />
 
             <section className="space-y-4">
               <h2 className="text-xl md:text-2xl font-semibold tracking-normal text-gray-900 dark:text-white">

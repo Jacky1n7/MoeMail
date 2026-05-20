@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth"
 import { Shield, Share2, Clock, Code2 } from "lucide-react"
 import { ActionButton } from "@/components/home/action-button"
 import { FeatureCard } from "@/components/home/feature-card"
+import { AdSlot } from "@/components/monetization/ad-slot"
+import { MonetizationCards } from "@/components/monetization/monetization-cards"
 import { getTranslations } from "next-intl/server"
 import type { Locale } from "@/i18n/config"
 import Link from "next/link"
@@ -84,6 +86,11 @@ export default async function Home({
                   </Link>
                 ))}
               </nav>
+
+              <div className="mx-auto w-full max-w-3xl space-y-4 pt-2 text-left">
+                <AdSlot placement="home" />
+                <MonetizationCards placement="home" locale={locale} />
+              </div>
             </div>
           </div>
         </main>

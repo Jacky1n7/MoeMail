@@ -3,6 +3,8 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { ArrowRight } from "lucide-react"
 import { Header } from "@/components/layout/header"
+import { AdSlot } from "@/components/monetization/ad-slot"
+import { MonetizationCards } from "@/components/monetization/monetization-cards"
 import { EMAIL_GUIDE_PAGES, SITE_NAME, SITE_URL, type EmailGuidePageSlug } from "@/config/site"
 import { i18n, type Locale } from "@/i18n/config"
 import {
@@ -113,6 +115,9 @@ export default async function GuidePage({
                 </section>
               ))}
             </div>
+
+            <AdSlot placement="guide" />
+            <MonetizationCards placement="guide" locale={locale} />
 
             <section className="space-y-4">
               <h2 className="text-xl md:text-2xl font-semibold tracking-normal text-gray-900 dark:text-white">
