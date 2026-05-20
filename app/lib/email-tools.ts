@@ -33,6 +33,41 @@ export const DNSBL_ZONES = [
   "dnsbl.sorbs.net",
 ] as const
 
+export const SPF_PROVIDER_PRESETS = [
+  {
+    id: "google-workspace",
+    name: "Google Workspace",
+    include: "_spf.google.com",
+  },
+  {
+    id: "microsoft-365",
+    name: "Microsoft 365",
+    include: "spf.protection.outlook.com",
+  },
+  {
+    id: "zoho-mail",
+    name: "Zoho Mail",
+    include: "zohomail.com",
+  },
+  {
+    id: "sendgrid",
+    name: "SendGrid",
+    include: "sendgrid.net",
+  },
+  {
+    id: "mailgun",
+    name: "Mailgun",
+    include: "mailgun.org",
+  },
+  {
+    id: "amazon-ses",
+    name: "Amazon SES",
+    include: "amazonses.com",
+  },
+] as const
+
+export type SpfProviderPresetId = (typeof SPF_PROVIDER_PRESETS)[number]["id"]
+
 export type HeaderSignal = {
   kind: "good" | "warning" | "info"
   label: string
@@ -134,6 +169,14 @@ export function buildSpfRecord(input: SpfRecordInput) {
   ].filter(Boolean)
 
   return `v=spf1 ${mechanisms.join(" ")}`
+}
+
+export function getSpfPresetIncludes(ids: readonly string[]) {
+  const selected = new Set(ids)
+
+  return SPF_PROVIDER_PRESETS
+    .filter((preset) => selected.has(preset.id))
+    .map((preset) => preset.include)
 }
 
 export function buildDmarcRecord(input: DmarcRecordInput) {

@@ -13,7 +13,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { buildDmarcRecord, buildSpfRecord, type DmarcRecordInput, type SpfRecordInput } from "@/lib/email-tools"
+import {
+  buildDmarcRecord,
+  buildSpfRecord,
+  getSpfPresetIncludes,
+  SPF_PROVIDER_PRESETS,
+  type DmarcRecordInput,
+  type SpfProviderPresetId,
+  type SpfRecordInput,
+} from "@/lib/email-tools"
 import type { Locale } from "@/i18n/config"
 
 type GeneratorKind = "spf" | "dmarc"
@@ -22,6 +30,7 @@ type GeneratorCopy = {
   title: string
   hint: string
   domainLabel: string
+  providerPresetsLabel: string
   includesLabel: string
   ip4Label: string
   allowALabel: string
@@ -41,6 +50,7 @@ const COPY: Record<Locale, GeneratorCopy> = {
     title: "Record builder",
     hint: "Adjust the fields and copy the TXT value into your DNS provider.",
     domainLabel: "Domain",
+    providerPresetsLabel: "Provider presets",
     includesLabel: "Include mechanisms",
     ip4Label: "IPv4 senders",
     allowALabel: "Allow domain A record",
@@ -62,6 +72,7 @@ const COPY: Record<Locale, GeneratorCopy> = {
     title: "记录生成器",
     hint: "调整字段后，把 TXT 值复制到你的 DNS 服务商。",
     domainLabel: "域名",
+    providerPresetsLabel: "服务商预设",
     includesLabel: "include 机制",
     ip4Label: "IPv4 发信地址",
     allowALabel: "允许域名 A 记录发信",
@@ -83,6 +94,7 @@ const COPY: Record<Locale, GeneratorCopy> = {
     title: "記錄產生器",
     hint: "調整欄位後，把 TXT 值複製到你的 DNS 服務商。",
     domainLabel: "網域",
+    providerPresetsLabel: "服務商預設",
     includesLabel: "include 機制",
     ip4Label: "IPv4 寄信地址",
     allowALabel: "允許網域 A 記錄寄信",
@@ -104,6 +116,7 @@ const COPY: Record<Locale, GeneratorCopy> = {
     title: "レコード作成",
     hint: "項目を調整し、TXT 値を DNS プロバイダーにコピーします。",
     domainLabel: "ドメイン",
+    providerPresetsLabel: "プロバイダー設定",
     includesLabel: "include メカニズム",
     ip4Label: "IPv4 送信元",
     allowALabel: "ドメインの A レコードを許可",
@@ -125,6 +138,7 @@ const COPY: Record<Locale, GeneratorCopy> = {
     title: "레코드 생성기",
     hint: "필드를 조정한 뒤 TXT 값을 DNS 제공업체에 복사하세요.",
     domainLabel: "도메인",
+    providerPresetsLabel: "제공업체 프리셋",
     includesLabel: "include 메커니즘",
     ip4Label: "IPv4 발신 주소",
     allowALabel: "도메인 A 레코드 허용",
@@ -154,7 +168,8 @@ export function EmailRecordGeneratorTool({
   const copy = COPY[locale] || COPY.en
   const [allowA, setAllowA] = useState(true)
   const [allowMx, setAllowMx] = useState(true)
-  const [includes, setIncludes] = useState("_spf.google.com")
+  const [selectedProviders, setSelectedProviders] = useState<SpfProviderPresetId[]>(["google-workspace"])
+  const [includes, setIncludes] = useState("")
   const [ip4, setIp4] = useState("")
   const [all, setAll] = useState<SpfRecordInput["all"]>("~all")
   const [policy, setPolicy] = useState<DmarcRecordInput["policy"]>("none")
@@ -164,11 +179,18 @@ export function EmailRecordGeneratorTool({
 
   const record = useMemo(() => {
     if (kind === "spf") {
-      return buildSpfRecord({ allowA, allowMx, includes, ip4, all })
+      const mergedIncludes = [...new Set([...getSpfPresetIncludes(selectedProviders), ...includes.split(",").map((item) => item.trim()).filter(Boolean)])]
+      return buildSpfRecord({ allowA, allowMx, includes: mergedIncludes.join(","), ip4, all })
     }
 
     return buildDmarcRecord({ policy, rua, pct })
-  }, [allowA, allowMx, all, includes, ip4, kind, pct, policy, rua])
+  }, [allowA, allowMx, all, includes, ip4, kind, pct, policy, rua, selectedProviders])
+
+  function toggleProvider(id: SpfProviderPresetId) {
+    setSelectedProviders((current) =>
+      current.includes(id) ? current.filter((providerId) => providerId !== id) : [...current, id]
+    )
+  }
 
   async function copyRecord() {
     await navigator.clipboard?.writeText(record)
@@ -191,9 +213,29 @@ export function EmailRecordGeneratorTool({
 
         {kind === "spf" ? (
           <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2">
+              <Label>{copy.providerPresetsLabel}</Label>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {SPF_PROVIDER_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => toggleProvider(preset.id)}
+                    className={
+                      selectedProviders.includes(preset.id)
+                        ? "rounded-md border border-primary bg-primary/10 px-3 py-2 text-left text-sm font-medium text-primary"
+                        : "rounded-md border border-gray-200 px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:border-primary/50 dark:border-gray-800 dark:text-gray-300"
+                    }
+                  >
+                    <span className="block">{preset.name}</span>
+                    <code className="mt-1 block break-all text-xs opacity-75">include:{preset.include}</code>
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="space-y-2">
               <Label>{copy.includesLabel}</Label>
-              <Input value={includes} onChange={(event) => setIncludes(event.target.value)} placeholder="_spf.google.com, sendgrid.net" />
+              <Input value={includes} onChange={(event) => setIncludes(event.target.value)} placeholder="custom.example.com, another.example.net" />
             </div>
             <div className="space-y-2">
               <Label>{copy.ip4Label}</Label>

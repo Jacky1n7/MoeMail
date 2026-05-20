@@ -63,6 +63,7 @@ export type EmailToolContent = {
   breadcrumb: string
   sections: ContentSection[]
   faq: FaqItem[]
+  relatedGuides: EmailGuidePageSlug[]
   toolCopy: DnsLookupToolCopy
   headerCopy: EmailHeaderAnalyzerCopy
 }
@@ -592,7 +593,9 @@ const TOOLS_INDEX: Record<Locale, ToolsIndexContent> = {
   },
 }
 
-type EmailToolContentEntry = Omit<EmailToolContent, "slug" | "toolCopy" | "headerCopy">
+type EmailToolContentEntry = Omit<EmailToolContent, "slug" | "toolCopy" | "headerCopy" | "relatedGuides"> & {
+  relatedGuides?: EmailGuidePageSlug[]
+}
 
 const TOOL_CONTENT: Record<Locale, Partial<Record<EmailToolPageSlug, EmailToolContentEntry>>> = {
   en: {
@@ -1620,7 +1623,18 @@ const ADDITIONAL_TOOL_CONTENT: Record<Locale, Record<"spf-generator" | "dmarc-ge
   },
 }
 
-const GUIDE_CONTENT: Record<Locale, Record<EmailGuidePageSlug, EmailGuideContent>> = {
+const DEFAULT_TOOL_RELATED_GUIDES: Record<EmailToolPageSlug, EmailGuidePageSlug[]> = {
+  "mx-lookup": ["why-email-goes-to-spam", "how-to-read-email-headers"],
+  "spf-checker": ["how-to-fix-spf-fail", "spf-record-examples"],
+  "dmarc-checker": ["dmarc-policy-guide", "dmarc-record-examples"],
+  "dkim-checker": ["what-is-dkim-selector", "why-email-goes-to-spam"],
+  "email-header-analyzer": ["how-to-read-email-headers", "why-email-goes-to-spam"],
+  "spf-generator": ["spf-record-examples", "how-to-fix-spf-fail"],
+  "dmarc-generator": ["dmarc-record-examples", "dmarc-policy-guide"],
+  "blacklist-checker": ["remove-ip-from-email-blacklists", "why-email-goes-to-spam"],
+}
+
+const GUIDE_CONTENT: Record<Locale, Partial<Record<EmailGuidePageSlug, EmailGuideContent>>> = {
   en: {
     "how-to-read-email-headers": {
       slug: "how-to-read-email-headers",
@@ -1950,12 +1964,22 @@ const GUIDE_CONTENT: Record<Locale, Record<EmailGuidePageSlug, EmailGuideContent
   ko: {} as Record<EmailGuidePageSlug, EmailGuideContent>,
 }
 
+function getBaseGuide(locale: Locale, slug: EmailGuidePageSlug): EmailGuideContent {
+  const content = GUIDE_CONTENT[locale]?.[slug]
+
+  if (!content) {
+    throw new Error(`Missing base guide content for ${locale}/${slug}`)
+  }
+
+  return content
+}
+
 GUIDE_CONTENT["zh-TW"] = {
   "how-to-read-email-headers": {
-    ...GUIDE_CONTENT["zh-CN"]["how-to-read-email-headers"],
+    ...getBaseGuide("zh-CN", "how-to-read-email-headers"),
     title: "如何閱讀郵件標頭",
     description: "了解哪些郵件標頭可以解釋寄件身分、投遞路徑和驗證結果。",
-    sections: GUIDE_CONTENT["zh-CN"]["how-to-read-email-headers"].sections.map((section) => ({
+    sections: getBaseGuide("zh-CN", "how-to-read-email-headers").sections.map((section) => ({
       heading: section.heading.replace("先看", "先看").replace("从下往上", "從下往上"),
       body: section.body.map((text) =>
         text
@@ -1971,7 +1995,7 @@ GUIDE_CONTENT["zh-TW"] = {
           .replaceAll("路径", "路徑")
       ),
     })),
-    faq: GUIDE_CONTENT["zh-CN"]["how-to-read-email-headers"].faq.map((item) => ({
+    faq: getBaseGuide("zh-CN", "how-to-read-email-headers").faq.map((item) => ({
       question: item.question.replaceAll("邮件", "郵件").replaceAll("垃圾箱", "垃圾郵件匣"),
       answer: item.answer
         .replaceAll("邮件", "郵件")
@@ -1981,7 +2005,7 @@ GUIDE_CONTENT["zh-TW"] = {
     })),
   },
   "how-to-fix-spf-fail": {
-    ...GUIDE_CONTENT["zh-CN"]["how-to-fix-spf-fail"],
+    ...getBaseGuide("zh-CN", "how-to-fix-spf-fail"),
     title: "如何修復 SPF Fail",
     description: "一個修復 SPF 失敗、又不誤傷合法寄信來源的實用清單。",
     sections: [
@@ -2012,7 +2036,7 @@ GUIDE_CONTENT["zh-TW"] = {
     ],
   },
   "what-is-dkim-selector": {
-    ...GUIDE_CONTENT["zh-CN"]["what-is-dkim-selector"],
+    ...getBaseGuide("zh-CN", "what-is-dkim-selector"),
     title: "什麼是 DKIM Selector",
     description: "理解 DKIM selector 如何幫助收件方找到正確的公開簽名金鑰。",
     sections: [
@@ -2043,7 +2067,7 @@ GUIDE_CONTENT["zh-TW"] = {
     ],
   },
   "dmarc-policy-guide": {
-    ...GUIDE_CONTENT["zh-CN"]["dmarc-policy-guide"],
+    ...getBaseGuide("zh-CN", "dmarc-policy-guide"),
     title: "DMARC 政策指南",
     description: "了解 p=none、quarantine、reject 如何影響網域保護和郵件投遞。",
     sections: [
@@ -2074,7 +2098,7 @@ GUIDE_CONTENT["zh-TW"] = {
     ],
   },
   "why-email-goes-to-spam": {
-    ...GUIDE_CONTENT["zh-CN"]["why-email-goes-to-spam"],
+    ...getBaseGuide("zh-CN", "why-email-goes-to-spam"),
     title: "為什麼郵件會進垃圾郵件匣",
     description: "合法郵件進入垃圾郵件匣的常見技術原因，以及如何排查。",
     sections: [
@@ -2432,6 +2456,499 @@ GUIDE_CONTENT.ko = {
   },
 }
 
+const ADDITIONAL_GUIDE_CONTENT: Record<Locale, Record<"spf-record-examples" | "dmarc-record-examples" | "remove-ip-from-email-blacklists", EmailGuideContent>> = {
+  en: {
+    "spf-record-examples": {
+      slug: "spf-record-examples",
+      title: "SPF Record Examples for Google Workspace, Microsoft 365, SendGrid, Mailgun, Zoho, and Amazon SES",
+      description: "Copy practical SPF examples and learn how to combine common email providers into one safe TXT record.",
+      sections: [
+        {
+          heading: "Common SPF includes",
+          body: [
+            "Google Workspace commonly uses include:_spf.google.com, Microsoft 365 commonly uses include:spf.protection.outlook.com, and Amazon SES commonly uses include:amazonses.com.",
+            "Zoho Mail commonly uses include:zohomail.com, SendGrid commonly uses include:sendgrid.net, and Mailgun commonly uses include:mailgun.org. Always merge services into one SPF record instead of publishing duplicates.",
+          ],
+        },
+        {
+          heading: "Example combined records",
+          body: [
+            "Google Workspace plus Microsoft 365: v=spf1 include:_spf.google.com include:spf.protection.outlook.com ~all",
+            "Amazon SES plus Mailgun: v=spf1 include:amazonses.com include:mailgun.org ~all. Keep an eye on SPF's 10 DNS lookup limit when adding many providers.",
+          ],
+        },
+      ],
+      relatedTools: ["spf-generator", "spf-checker", "email-header-analyzer"],
+      faq: [
+        {
+          question: "Can I publish one SPF record per provider?",
+          answer: "No. SPF expects one TXT record that starts with v=spf1. Put every provider in that single record.",
+        },
+        {
+          question: "Are these examples enough for DKIM and DMARC?",
+          answer: "No. SPF authorizes senders, but DKIM and DMARC still need their own setup for stronger domain protection.",
+        },
+      ],
+    },
+    "dmarc-record-examples": {
+      slug: "dmarc-record-examples",
+      title: "DMARC Record Examples for p=none, quarantine, and reject",
+      description: "Compare practical DMARC TXT records for monitoring, gradual enforcement, and strict domain protection.",
+      sections: [
+        {
+          heading: "Start with monitoring",
+          body: [
+            "A safe first DMARC record is v=DMARC1; p=none; rua=mailto:dmarc@example.com; pct=100. It requests reports without changing message handling.",
+            "Use this phase to discover legitimate senders and fix SPF or DKIM alignment before enforcement.",
+          ],
+        },
+        {
+          heading: "Move toward enforcement",
+          body: [
+            "A gradual record can use v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com; pct=25 to send some failing mail toward spam.",
+            "A strict record can use v=DMARC1; p=reject; rua=mailto:dmarc@example.com; pct=100 after legitimate senders are aligned.",
+          ],
+        },
+      ],
+      relatedTools: ["dmarc-generator", "dmarc-checker", "email-header-analyzer"],
+      faq: [
+        {
+          question: "Where should the DMARC record be created?",
+          answer: "Publish it as a TXT record at _dmarc.yourdomain.com.",
+        },
+        {
+          question: "Should I jump directly to p=reject?",
+          answer: "Only if you have already confirmed every legitimate sender passes aligned SPF or DKIM.",
+        },
+      ],
+    },
+    "remove-ip-from-email-blacklists": {
+      slug: "remove-ip-from-email-blacklists",
+      title: "How to Remove Your IP from Email Blacklists",
+      description: "A practical cleanup checklist for sender IPs that appear on DNS blocklists or suddenly land in spam.",
+      sections: [
+        {
+          heading: "Confirm the listing and the sender",
+          body: [
+            "First check the exact IPv4 address from your email headers. Shared hosting, relays, and marketing tools can send from a different IP than your website.",
+            "Use a blacklist checker to identify which DNSBLs list the IP, then compare the timing with bounces, complaint spikes, or compromised accounts.",
+          ],
+        },
+        {
+          heading: "Fix the cause before requesting delisting",
+          body: [
+            "Clean infected forms, rotate leaked SMTP credentials, pause suspicious campaigns, and verify SPF, DKIM, DMARC, reverse DNS, and bounce handling.",
+            "After the source is fixed, follow each blacklist operator's delisting process. Repeated requests without cleanup often make removal slower.",
+          ],
+        },
+      ],
+      relatedTools: ["blacklist-checker", "email-header-analyzer", "dmarc-checker"],
+      faq: [
+        {
+          question: "Does delisting happen instantly?",
+          answer: "Not always. Some lists expire automatically after traffic improves, while others require a manual request.",
+        },
+        {
+          question: "Should I change IP addresses?",
+          answer: "Changing IPs can help only after the abuse source is fixed. Otherwise the new IP can be listed too.",
+        },
+      ],
+    },
+  },
+  "zh-CN": {
+    "spf-record-examples": {
+      slug: "spf-record-examples",
+      title: "Google Workspace、Microsoft 365、SendGrid、Mailgun、Zoho 和 Amazon SES 的 SPF 记录示例",
+      description: "复制常见邮件服务商的 SPF 示例，并学习如何把多个服务合并到一条安全的 TXT 记录。",
+      sections: [
+        {
+          heading: "常见 SPF include",
+          body: [
+            "Google Workspace 常用 include:_spf.google.com，Microsoft 365 常用 include:spf.protection.outlook.com，Amazon SES 常用 include:amazonses.com。",
+            "Zoho Mail 常用 include:zohomail.com，SendGrid 常用 include:sendgrid.net，Mailgun 常用 include:mailgun.org。多个服务要合并到一条 SPF，不能分别发布多条。",
+          ],
+        },
+        {
+          heading: "组合记录示例",
+          body: [
+            "Google Workspace 加 Microsoft 365：v=spf1 include:_spf.google.com include:spf.protection.outlook.com ~all",
+            "Amazon SES 加 Mailgun：v=spf1 include:amazonses.com include:mailgun.org ~all。服务商很多时，要留意 SPF 的 10 次 DNS 查询限制。",
+          ],
+        },
+      ],
+      relatedTools: ["spf-generator", "spf-checker", "email-header-analyzer"],
+      faq: [
+        {
+          question: "可以每个服务商发布一条 SPF 吗？",
+          answer: "不可以。SPF 应该只有一条以 v=spf1 开头的 TXT 记录，把所有服务商放在同一条里。",
+        },
+        {
+          question: "这些示例能替代 DKIM 和 DMARC 吗？",
+          answer: "不能。SPF 负责授权发信源，DKIM 和 DMARC 仍需要单独配置。",
+        },
+      ],
+    },
+    "dmarc-record-examples": {
+      slug: "dmarc-record-examples",
+      title: "p=none、quarantine 和 reject 的 DMARC 记录示例",
+      description: "对比用于监控、逐步强制和严格保护域名的 DMARC TXT 记录。",
+      sections: [
+        {
+          heading: "先从监控开始",
+          body: [
+            "安全的第一条 DMARC 可以是 v=DMARC1; p=none; rua=mailto:dmarc@example.com; pct=100，它只请求报告，不改变邮件处理。",
+            "这个阶段用来发现合法发信源，并修复 SPF 或 DKIM 对齐问题。",
+          ],
+        },
+        {
+          heading: "逐步进入强制策略",
+          body: [
+            "渐进策略可以用 v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com; pct=25，让部分失败邮件进入垃圾箱。",
+            "确认合法发信源都对齐后，可以使用 v=DMARC1; p=reject; rua=mailto:dmarc@example.com; pct=100。",
+          ],
+        },
+      ],
+      relatedTools: ["dmarc-generator", "dmarc-checker", "email-header-analyzer"],
+      faq: [
+        {
+          question: "DMARC 记录应该建在哪里？",
+          answer: "作为 TXT 记录发布在 _dmarc.yourdomain.com。",
+        },
+        {
+          question: "可以直接上 p=reject 吗？",
+          answer: "只有在确认所有合法发信源都通过对齐的 SPF 或 DKIM 后才建议这样做。",
+        },
+      ],
+    },
+    "remove-ip-from-email-blacklists": {
+      slug: "remove-ip-from-email-blacklists",
+      title: "如何把发信 IP 从邮件黑名单中移除",
+      description: "当发信 IP 出现在 DNS 黑名单或邮件突然进垃圾箱时，可以按这个清单排查和清理。",
+      sections: [
+        {
+          heading: "确认被列入的 IP 和真实发信源",
+          body: [
+            "先从邮件头里确认真正的 IPv4 发信地址。共享主机、中继和群发工具的发信 IP 可能和网站 IP 不一样。",
+            "用黑名单检查工具确认具体被哪些 DNSBL 列入，再对照退信、投诉激增或账号泄露的时间点。",
+          ],
+        },
+        {
+          heading: "先修复原因，再申请移除",
+          body: [
+            "清理被滥用的表单，轮换泄露的 SMTP 密码，暂停异常活动，并检查 SPF、DKIM、DMARC、反向 DNS 和退信处理。",
+            "原因修复后，再按各黑名单运营方的流程申请 delist。没有清理就反复申请，通常会拖慢移除。",
+          ],
+        },
+      ],
+      relatedTools: ["blacklist-checker", "email-header-analyzer", "dmarc-checker"],
+      faq: [
+        {
+          question: "移除黑名单会立刻生效吗？",
+          answer: "不一定。有些列表会在流量恢复后自动过期，有些需要人工提交申请。",
+        },
+        {
+          question: "直接换 IP 可以吗？",
+          answer: "只有在滥用源已经修复后才有意义，否则新 IP 也可能很快被列入。",
+        },
+      ],
+    },
+  },
+  "zh-TW": {
+    "spf-record-examples": {
+      slug: "spf-record-examples",
+      title: "Google Workspace、Microsoft 365、SendGrid、Mailgun、Zoho 和 Amazon SES 的 SPF 記錄範例",
+      description: "複製常見郵件服務商的 SPF 範例，並學習如何把多個服務合併到一筆安全的 TXT 記錄。",
+      sections: [
+        {
+          heading: "常見 SPF include",
+          body: [
+            "Google Workspace 常用 include:_spf.google.com，Microsoft 365 常用 include:spf.protection.outlook.com，Amazon SES 常用 include:amazonses.com。",
+            "Zoho Mail 常用 include:zohomail.com，SendGrid 常用 include:sendgrid.net，Mailgun 常用 include:mailgun.org。多個服務要合併到一筆 SPF，不能分別發布多筆。",
+          ],
+        },
+        {
+          heading: "組合記錄範例",
+          body: [
+            "Google Workspace 加 Microsoft 365：v=spf1 include:_spf.google.com include:spf.protection.outlook.com ~all",
+            "Amazon SES 加 Mailgun：v=spf1 include:amazonses.com include:mailgun.org ~all。服務商很多時，要留意 SPF 的 10 次 DNS 查詢限制。",
+          ],
+        },
+      ],
+      relatedTools: ["spf-generator", "spf-checker", "email-header-analyzer"],
+      faq: [
+        {
+          question: "可以每個服務商發布一筆 SPF 嗎？",
+          answer: "不可以。SPF 應該只有一筆以 v=spf1 開頭的 TXT 記錄，把所有服務商放在同一筆裡。",
+        },
+        {
+          question: "這些範例能替代 DKIM 和 DMARC 嗎？",
+          answer: "不能。SPF 負責授權寄信來源，DKIM 和 DMARC 仍需要單獨設定。",
+        },
+      ],
+    },
+    "dmarc-record-examples": {
+      slug: "dmarc-record-examples",
+      title: "p=none、quarantine 和 reject 的 DMARC 記錄範例",
+      description: "對比用於監控、逐步強制和嚴格保護網域的 DMARC TXT 記錄。",
+      sections: [
+        {
+          heading: "先從監控開始",
+          body: [
+            "安全的第一筆 DMARC 可以是 v=DMARC1; p=none; rua=mailto:dmarc@example.com; pct=100，它只請求報告，不改變郵件處理。",
+            "這個階段用來發現合法寄信來源，並修復 SPF 或 DKIM 對齊問題。",
+          ],
+        },
+        {
+          heading: "逐步進入強制政策",
+          body: [
+            "漸進政策可以用 v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com; pct=25，讓部分失敗郵件進入垃圾信。",
+            "確認合法寄信來源都對齊後，可以使用 v=DMARC1; p=reject; rua=mailto:dmarc@example.com; pct=100。",
+          ],
+        },
+      ],
+      relatedTools: ["dmarc-generator", "dmarc-checker", "email-header-analyzer"],
+      faq: [
+        {
+          question: "DMARC 記錄應該建在哪裡？",
+          answer: "作為 TXT 記錄發布在 _dmarc.yourdomain.com。",
+        },
+        {
+          question: "可以直接上 p=reject 嗎？",
+          answer: "只有在確認所有合法寄信來源都通過對齊的 SPF 或 DKIM 後才建議這樣做。",
+        },
+      ],
+    },
+    "remove-ip-from-email-blacklists": {
+      slug: "remove-ip-from-email-blacklists",
+      title: "如何把寄信 IP 從郵件黑名單中移除",
+      description: "當寄信 IP 出現在 DNS 黑名單或郵件突然進垃圾信時，可以按這個清單排查和清理。",
+      sections: [
+        {
+          heading: "確認被列入的 IP 和真實寄信來源",
+          body: [
+            "先從郵件標頭裡確認真正的 IPv4 寄信地址。共享主機、中繼和群發工具的寄信 IP 可能和網站 IP 不一樣。",
+            "用黑名單檢查工具確認具體被哪些 DNSBL 列入，再對照退信、投訴激增或帳號洩露的時間點。",
+          ],
+        },
+        {
+          heading: "先修復原因，再申請移除",
+          body: [
+            "清理被濫用的表單，輪換洩露的 SMTP 密碼，暫停異常活動，並檢查 SPF、DKIM、DMARC、反向 DNS 和退信處理。",
+            "原因修復後，再按各黑名單營運方的流程申請 delist。沒有清理就反覆申請，通常會拖慢移除。",
+          ],
+        },
+      ],
+      relatedTools: ["blacklist-checker", "email-header-analyzer", "dmarc-checker"],
+      faq: [
+        {
+          question: "移除黑名單會立刻生效嗎？",
+          answer: "不一定。有些列表會在流量恢復後自動過期，有些需要人工提交申請。",
+        },
+        {
+          question: "直接換 IP 可以嗎？",
+          answer: "只有在濫用源已經修復後才有意義，否則新 IP 也可能很快被列入。",
+        },
+      ],
+    },
+  },
+  ja: {
+    "spf-record-examples": {
+      slug: "spf-record-examples",
+      title: "Google Workspace、Microsoft 365、SendGrid、Mailgun、Zoho、Amazon SES の SPF レコード例",
+      description: "よく使われるメールサービスの SPF 例を確認し、複数サービスを 1 つの TXT レコードにまとめる方法を学びます。",
+      sections: [
+        {
+          heading: "よく使われる SPF include",
+          body: [
+            "Google Workspace は include:_spf.google.com、Microsoft 365 は include:spf.protection.outlook.com、Amazon SES は include:amazonses.com がよく使われます。",
+            "Zoho Mail は include:zohomail.com、SendGrid は include:sendgrid.net、Mailgun は include:mailgun.org がよく使われます。複数サービスは 1 つの SPF に統合します。",
+          ],
+        },
+        {
+          heading: "組み合わせ例",
+          body: [
+            "Google Workspace と Microsoft 365: v=spf1 include:_spf.google.com include:spf.protection.outlook.com ~all",
+            "Amazon SES と Mailgun: v=spf1 include:amazonses.com include:mailgun.org ~all。サービスが多い場合は SPF の 10 DNS ルックアップ制限に注意します。",
+          ],
+        },
+      ],
+      relatedTools: ["spf-generator", "spf-checker", "email-header-analyzer"],
+      faq: [
+        {
+          question: "プロバイダーごとに SPF レコードを作れますか？",
+          answer: "いいえ。v=spf1 で始まる TXT レコードは 1 つにまとめる必要があります。",
+        },
+        {
+          question: "この例だけで DKIM と DMARC も完了しますか？",
+          answer: "いいえ。SPF は送信元を許可する仕組みで、DKIM と DMARC は別途設定が必要です。",
+        },
+      ],
+    },
+    "dmarc-record-examples": {
+      slug: "dmarc-record-examples",
+      title: "p=none、quarantine、reject の DMARC レコード例",
+      description: "監視、段階的な適用、厳格な保護に使う DMARC TXT レコードを比較します。",
+      sections: [
+        {
+          heading: "監視から始める",
+          body: [
+            "最初は v=DMARC1; p=none; rua=mailto:dmarc@example.com; pct=100 のように、処理を変えずレポートだけ受け取る設定が安全です。",
+            "この段階で正当な送信元を見つけ、SPF または DKIM の整合を修正します。",
+          ],
+        },
+        {
+          heading: "段階的に強化する",
+          body: [
+            "段階適用では v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com; pct=25 のように、一部の失敗メールを迷惑メールへ送ります。",
+            "正当な送信元が整合したら v=DMARC1; p=reject; rua=mailto:dmarc@example.com; pct=100 を検討します。",
+          ],
+        },
+      ],
+      relatedTools: ["dmarc-generator", "dmarc-checker", "email-header-analyzer"],
+      faq: [
+        {
+          question: "DMARC レコードはどこに作りますか？",
+          answer: "_dmarc.yourdomain.com に TXT レコードとして公開します。",
+        },
+        {
+          question: "すぐ p=reject にしてよいですか？",
+          answer: "正当な送信元がすべて整合した SPF または DKIM を通過することを確認してからにしてください。",
+        },
+      ],
+    },
+    "remove-ip-from-email-blacklists": {
+      slug: "remove-ip-from-email-blacklists",
+      title: "送信 IP をメールブラックリストから削除する方法",
+      description: "送信 IP が DNS ブラックリストに載ったり、メールが急に迷惑メールに入ったりしたときの確認手順です。",
+      sections: [
+        {
+          heading: "掲載された IP と送信元を確認する",
+          body: [
+            "まずメールヘッダーから実際の IPv4 送信元アドレスを確認します。共有ホスティングや中継、配信ツールでは Web サイトの IP と異なることがあります。",
+            "ブラックリストチェックで掲載先を確認し、バウンス、苦情、漏えいしたアカウントの時期と照合します。",
+          ],
+        },
+        {
+          heading: "原因を直してから削除申請する",
+          body: [
+            "悪用されたフォームを清掃し、漏えいした SMTP 認証情報を変更し、不審な配信を止め、SPF、DKIM、DMARC、逆引き DNS、バウンス処理を確認します。",
+            "原因を修正した後で、各リスト運営者の手順に従って delist を申請します。",
+          ],
+        },
+      ],
+      relatedTools: ["blacklist-checker", "email-header-analyzer", "dmarc-checker"],
+      faq: [
+        {
+          question: "削除はすぐ反映されますか？",
+          answer: "必ずしもそうではありません。自動で期限切れになるリストもあれば、手動申請が必要なリストもあります。",
+        },
+        {
+          question: "IP を変えれば解決しますか？",
+          answer: "悪用の原因を直した後なら助けになります。原因が残っていると新しい IP も掲載されます。",
+        },
+      ],
+    },
+  },
+  ko: {
+    "spf-record-examples": {
+      slug: "spf-record-examples",
+      title: "Google Workspace, Microsoft 365, SendGrid, Mailgun, Zoho, Amazon SES SPF 레코드 예시",
+      description: "일반적인 메일 서비스 SPF 예시를 보고 여러 서비스를 하나의 TXT 레코드로 합치는 방법을 배웁니다.",
+      sections: [
+        {
+          heading: "일반적인 SPF include",
+          body: [
+            "Google Workspace는 include:_spf.google.com, Microsoft 365는 include:spf.protection.outlook.com, Amazon SES는 include:amazonses.com을 주로 사용합니다.",
+            "Zoho Mail은 include:zohomail.com, SendGrid는 include:sendgrid.net, Mailgun은 include:mailgun.org을 주로 사용합니다. 여러 서비스는 하나의 SPF 레코드로 합쳐야 합니다.",
+          ],
+        },
+        {
+          heading: "조합 예시",
+          body: [
+            "Google Workspace와 Microsoft 365: v=spf1 include:_spf.google.com include:spf.protection.outlook.com ~all",
+            "Amazon SES와 Mailgun: v=spf1 include:amazonses.com include:mailgun.org ~all. 서비스가 많으면 SPF의 10 DNS 조회 제한을 확인하세요.",
+          ],
+        },
+      ],
+      relatedTools: ["spf-generator", "spf-checker", "email-header-analyzer"],
+      faq: [
+        {
+          question: "제공업체마다 SPF 레코드를 하나씩 만들 수 있나요?",
+          answer: "아니요. v=spf1로 시작하는 TXT 레코드는 하나로 합쳐야 합니다.",
+        },
+        {
+          question: "이 예시만으로 DKIM과 DMARC도 끝나나요?",
+          answer: "아닙니다. SPF는 발신자를 허용하는 방식이고 DKIM과 DMARC는 별도로 설정해야 합니다.",
+        },
+      ],
+    },
+    "dmarc-record-examples": {
+      slug: "dmarc-record-examples",
+      title: "p=none, quarantine, reject DMARC 레코드 예시",
+      description: "모니터링, 단계적 적용, 강력한 보호에 쓰는 DMARC TXT 레코드를 비교합니다.",
+      sections: [
+        {
+          heading: "모니터링부터 시작",
+          body: [
+            "처음에는 v=DMARC1; p=none; rua=mailto:dmarc@example.com; pct=100처럼 처리를 바꾸지 않고 보고서만 받는 설정이 안전합니다.",
+            "이 단계에서 정상 발신자를 찾고 SPF 또는 DKIM 정렬을 수정하세요.",
+          ],
+        },
+        {
+          heading: "단계적으로 강화",
+          body: [
+            "점진 적용은 v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com; pct=25처럼 일부 실패 메일을 스팸으로 보낼 수 있습니다.",
+            "정상 발신자가 정렬된 뒤 v=DMARC1; p=reject; rua=mailto:dmarc@example.com; pct=100을 고려하세요.",
+          ],
+        },
+      ],
+      relatedTools: ["dmarc-generator", "dmarc-checker", "email-header-analyzer"],
+      faq: [
+        {
+          question: "DMARC 레코드는 어디에 만드나요?",
+          answer: "_dmarc.yourdomain.com에 TXT 레코드로 게시합니다.",
+        },
+        {
+          question: "바로 p=reject를 사용해도 되나요?",
+          answer: "모든 정상 발신자가 정렬된 SPF 또는 DKIM을 통과하는 것을 확인한 뒤 사용하는 것이 좋습니다.",
+        },
+      ],
+    },
+    "remove-ip-from-email-blacklists": {
+      slug: "remove-ip-from-email-blacklists",
+      title: "발신 IP를 메일 블랙리스트에서 제거하는 방법",
+      description: "발신 IP가 DNS 차단 목록에 있거나 메일이 갑자기 스팸으로 갈 때 확인할 체크리스트입니다.",
+      sections: [
+        {
+          heading: "등재된 IP와 발신자를 확인",
+          body: [
+            "먼저 메일 헤더에서 실제 IPv4 발신 주소를 확인하세요. 공유 호스팅, 릴레이, 마케팅 도구는 웹사이트 IP와 다른 IP로 보낼 수 있습니다.",
+            "블랙리스트 검사로 어떤 DNSBL에 등재되었는지 확인하고, 반송, 신고 증가, 계정 유출 시점과 비교하세요.",
+          ],
+        },
+        {
+          heading: "원인을 고친 뒤 해제 요청",
+          body: [
+            "악용된 폼을 정리하고, 유출된 SMTP 자격 증명을 교체하고, 의심스러운 캠페인을 멈추며 SPF, DKIM, DMARC, 역방향 DNS, 반송 처리를 확인하세요.",
+            "원인을 수정한 뒤 각 목록 운영자의 절차에 따라 delist를 요청하세요.",
+          ],
+        },
+      ],
+      relatedTools: ["blacklist-checker", "email-header-analyzer", "dmarc-checker"],
+      faq: [
+        {
+          question: "해제가 즉시 반영되나요?",
+          answer: "항상 그렇지는 않습니다. 트래픽이 개선되면 자동 만료되는 목록도 있고 수동 요청이 필요한 목록도 있습니다.",
+        },
+        {
+          question: "IP를 바꾸면 해결되나요?",
+          answer: "악용 원인을 고친 뒤에는 도움이 될 수 있습니다. 원인이 남아 있으면 새 IP도 등재될 수 있습니다.",
+        },
+      ],
+    },
+  },
+}
+
 export function getToolsIndexContent(locale: Locale): ToolsIndexContent {
   return TOOLS_INDEX[locale] || TOOLS_INDEX[DEFAULT_LOCALE]
 }
@@ -2463,16 +2980,31 @@ export function getEmailToolContent(locale: Locale, slug: EmailToolPageSlug): Em
     TOOL_CONTENT[DEFAULT_LOCALE][slug] ||
     ADDITIONAL_TOOL_CONTENT[DEFAULT_LOCALE][slug as keyof (typeof ADDITIONAL_TOOL_CONTENT)[Locale]]
 
+  if (!localized) {
+    throw new Error(`Missing tool content for ${slug}`)
+  }
+
   return {
     slug,
     ...localized,
+    relatedGuides: localized.relatedGuides || DEFAULT_TOOL_RELATED_GUIDES[slug],
     toolCopy: DNS_COPY[locale] || DNS_COPY[DEFAULT_LOCALE],
     headerCopy: HEADER_COPY[locale] || HEADER_COPY[DEFAULT_LOCALE],
   }
 }
 
 export function getEmailGuideContent(locale: Locale, slug: EmailGuidePageSlug): EmailGuideContent {
-  return GUIDE_CONTENT[locale]?.[slug] || GUIDE_CONTENT[DEFAULT_LOCALE][slug]
+  const localized =
+    GUIDE_CONTENT[locale]?.[slug] ||
+    ADDITIONAL_GUIDE_CONTENT[locale]?.[slug as keyof (typeof ADDITIONAL_GUIDE_CONTENT)[Locale]] ||
+    GUIDE_CONTENT[DEFAULT_LOCALE][slug] ||
+    ADDITIONAL_GUIDE_CONTENT[DEFAULT_LOCALE][slug as keyof (typeof ADDITIONAL_GUIDE_CONTENT)[Locale]]
+
+  if (!localized) {
+    throw new Error(`Missing guide content for ${slug}`)
+  }
+
+  return localized
 }
 
 export function getLanguageAlternates(path: string) {

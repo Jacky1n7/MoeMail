@@ -35,6 +35,7 @@ for (const locale of i18n.locales) {
     assert.ok(content.description.length > 0, `${locale}/${tool.slug} description is missing`)
     assert.ok(content.sections.length >= 1, `${locale}/${tool.slug} sections are missing`)
     assert.ok(content.faq.length >= 2, `${locale}/${tool.slug} FAQ is missing`)
+    assert.ok(content.relatedGuides.length >= 1, `${locale}/${tool.slug} related guides are missing`)
     assert.ok(content.toolCopy.lookup.length > 0, `${locale}/${tool.slug} lookup label is missing`)
     assert.match(getSearchTitle(locale, "tool", content.title), /MoeMail/)
     assert.notEqual(getSearchDescription(locale, "tool", content.description), content.description)
@@ -103,6 +104,19 @@ for (const locale of i18n.locales as readonly Locale[]) {
 for (const slug of ["spf-generator", "dmarc-generator", "blacklist-checker"]) {
   assert.ok(EMAIL_TOOL_PAGES.some((tool) => tool.slug === slug), `${slug} tool metadata is missing`)
 }
+
+for (const slug of ["spf-record-examples", "dmarc-record-examples", "remove-ip-from-email-blacklists"]) {
+  assert.ok(EMAIL_GUIDE_PAGES.some((guide) => guide.slug === slug), `${slug} guide metadata is missing`)
+}
+
+assert.deepEqual(getEmailToolContent("en", "spf-checker").relatedGuides.slice(0, 2), [
+  "how-to-fix-spf-fail",
+  "spf-record-examples",
+])
+assert.ok(getEmailToolContent("en", "dmarc-generator").relatedGuides.includes("dmarc-record-examples"))
+assert.ok(getEmailToolContent("en", "blacklist-checker").relatedGuides.includes("remove-ip-from-email-blacklists"))
+assert.ok(getEmailGuideContent("en", "spf-record-examples").relatedTools.includes("spf-generator"))
+assert.ok(getEmailGuideContent("zh-CN", "remove-ip-from-email-blacklists").title.includes("黑名单"))
 
 assert.match(INDEXNOW_KEY, /^[a-zA-Z0-9-]{8,128}$/)
 assert.equal(readFileSync(`public/${INDEXNOW_KEY}.txt`, "utf8").trim(), INDEXNOW_KEY)

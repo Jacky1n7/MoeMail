@@ -87,6 +87,15 @@ export const EMAIL_GUIDE_PAGES = [
   {
     slug: "why-email-goes-to-spam",
   },
+  {
+    slug: "spf-record-examples",
+  },
+  {
+    slug: "dmarc-record-examples",
+  },
+  {
+    slug: "remove-ip-from-email-blacklists",
+  },
 ] as const
 
 export type EmailGuidePageSlug = (typeof EMAIL_GUIDE_PAGES)[number]["slug"]

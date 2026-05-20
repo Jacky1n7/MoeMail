@@ -10,6 +10,7 @@ import { EMAIL_TOOL_PAGES, type EmailToolPageSlug, SITE_NAME, SITE_URL } from "@
 import { i18n, type Locale } from "@/i18n/config"
 import {
   createFaqJsonLd,
+  getEmailGuideContent,
   createSoftwareApplicationJsonLd,
   getEmailToolContent,
   getLanguageAlternates,
@@ -129,6 +130,28 @@ export default async function ToolPage({
                 ))}
               </section>
             ))}
+
+            <section className="space-y-4">
+              <h2 className="text-xl md:text-2xl font-semibold tracking-normal text-gray-900 dark:text-white">
+                {locale === "en" ? "Related guides" : locale === "ja" ? "関連ガイド" : locale === "ko" ? "관련 가이드" : locale === "zh-TW" ? "相關指南" : "相关指南"}
+              </h2>
+              <div className="grid gap-3 md:grid-cols-2">
+                {tool.relatedGuides.map((guideSlug) => {
+                  const guide = getEmailGuideContent(locale, guideSlug)
+
+                  return (
+                    <Link
+                      key={guide.slug}
+                      href={`/${locale}/guides/${guide.slug}`}
+                      className="group rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:border-primary/50 dark:border-gray-800 dark:bg-gray-950"
+                    >
+                      <h3 className="font-medium text-gray-950 dark:text-white">{guide.title}</h3>
+                      <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{guide.description}</p>
+                    </Link>
+                  )
+                })}
+              </div>
+            </section>
 
             <section className="space-y-4">
               <h2 className="text-xl md:text-2xl font-semibold tracking-normal text-gray-900 dark:text-white">

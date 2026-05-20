@@ -5,7 +5,9 @@ import {
   buildDnsblQueries,
   buildSpfRecord,
   filterDnsRecords,
+  getSpfPresetIncludes,
   parseEmailHeaders,
+  SPF_PROVIDER_PRESETS,
   stripTxtQuotes,
 } from "../app/lib/email-tools"
 
@@ -87,3 +89,17 @@ assert.deepEqual(dnsblQueries.slice(0, 2), [
     query: "10.2.0.192.bl.spamcop.net",
   },
 ])
+
+assert.ok(SPF_PROVIDER_PRESETS.some((preset) => preset.id === "google-workspace" && preset.include === "_spf.google.com"))
+assert.ok(SPF_PROVIDER_PRESETS.some((preset) => preset.id === "microsoft-365" && preset.include === "spf.protection.outlook.com"))
+assert.ok(SPF_PROVIDER_PRESETS.some((preset) => preset.id === "amazon-ses" && preset.include === "amazonses.com"))
+assert.deepEqual(getSpfPresetIncludes(["google-workspace", "sendgrid", "missing"]), ["_spf.google.com", "sendgrid.net"])
+
+const presetSpfRecord = buildSpfRecord({
+  allowA: false,
+  allowMx: false,
+  includes: getSpfPresetIncludes(["google-workspace", "microsoft-365"]).join(","),
+  ip4: "",
+  all: "~all",
+})
+assert.equal(presetSpfRecord, "v=spf1 include:_spf.google.com include:spf.protection.outlook.com ~all")
