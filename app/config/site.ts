@@ -67,6 +67,11 @@ export const EMAIL_TOOL_PAGES = [
     title: "Email Blacklist Checker",
     description: "Check whether an IPv4 address appears on common DNS blocklists used by mail receivers.",
   },
+  {
+    slug: "email-dns-health-check",
+    title: "Email DNS Health Check",
+    description: "Run one domain check for MX, SPF, DMARC, DKIM, and sender IP blacklist signals.",
+  },
 ] as const
 
 export type EmailToolPageSlug = (typeof EMAIL_TOOL_PAGES)[number]["slug"]

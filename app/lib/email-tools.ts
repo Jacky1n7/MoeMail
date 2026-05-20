@@ -95,6 +95,35 @@ export type ParsedEmailHeaders = {
   signals: HeaderSignal[]
 }
 
+export type EmailHealthStatus = "pass" | "warning" | "fail" | "info"
+
+export type EmailHealthItem = {
+  id: "mx" | "spf" | "dmarc" | "dkim" | "blacklist"
+  status: EmailHealthStatus
+  score: number
+  weight: number
+  label: string
+  detail: string
+  recommendation: string
+}
+
+export type EmailHealthReportInput = {
+  mxRecords: DnsRecord[]
+  spfRecords: DnsRecord[]
+  dmarcRecords: DnsRecord[]
+  dkimRecords: DnsRecord[]
+  blacklistResults?: Array<{
+    zone: string
+    listed: boolean
+  }>
+}
+
+export type EmailHealthReport = {
+  score: number
+  grade: "excellent" | "good" | "needs-work" | "poor"
+  items: EmailHealthItem[]
+}
+
 export function normalizeDomainInput(value: string) {
   return value
     .trim()
@@ -221,6 +250,184 @@ export function buildDnsblQueries(ipv4: string) {
     zone,
     query: `${reversed}.${zone}`,
   }))
+}
+
+function getDmarcPolicy(records: DnsRecord[]) {
+  const value = stripTxtQuotes(records[0]?.value || "").toLowerCase()
+  const match = value.match(/(?:^|;\s*)p=(none|quarantine|reject)(?:;|$)/)
+
+  return match?.[1] as "none" | "quarantine" | "reject" | undefined
+}
+
+function getHealthGrade(score: number): EmailHealthReport["grade"] {
+  if (score >= 90) {
+    return "excellent"
+  }
+
+  if (score >= 75) {
+    return "good"
+  }
+
+  if (score >= 50) {
+    return "needs-work"
+  }
+
+  return "poor"
+}
+
+export function buildEmailHealthReport(input: EmailHealthReportInput): EmailHealthReport {
+  const items: EmailHealthItem[] = []
+
+  items.push(input.mxRecords.length > 0 ? {
+    id: "mx",
+    status: "pass",
+    score: 25,
+    weight: 25,
+    label: "MX records",
+    detail: `${input.mxRecords.length} MX record${input.mxRecords.length === 1 ? "" : "s"} found.`,
+    recommendation: "Mail receivers can find where to deliver messages for this domain.",
+  } : {
+    id: "mx",
+    status: "fail",
+    score: 0,
+    weight: 25,
+    label: "MX records",
+    detail: "No MX records were found.",
+    recommendation: "Publish MX records for the mail service that should receive this domain's email.",
+  })
+
+  if (input.spfRecords.length === 1) {
+    items.push({
+      id: "spf",
+      status: "pass",
+      score: 20,
+      weight: 20,
+      label: "SPF record",
+      detail: "One SPF record was found.",
+      recommendation: "Keep every authorized sender merged into this single SPF record.",
+    })
+  } else if (input.spfRecords.length > 1) {
+    items.push({
+      id: "spf",
+      status: "warning",
+      score: 8,
+      weight: 20,
+      label: "SPF record",
+      detail: `${input.spfRecords.length} SPF records were found.`,
+      recommendation: "Merge duplicate SPF TXT records into one record to avoid permanent errors.",
+    })
+  } else {
+    items.push({
+      id: "spf",
+      status: "fail",
+      score: 0,
+      weight: 20,
+      label: "SPF record",
+      detail: "No SPF record was found.",
+      recommendation: "Publish one TXT record that starts with v=spf1 and includes every legitimate sender.",
+    })
+  }
+
+  const dmarcPolicy = getDmarcPolicy(input.dmarcRecords)
+  if (dmarcPolicy === "reject") {
+    items.push({
+      id: "dmarc",
+      status: "pass",
+      score: 20,
+      weight: 20,
+      label: "DMARC policy",
+      detail: "DMARC is published with p=reject.",
+      recommendation: "Strict enforcement is active. Keep monitoring reports for new senders.",
+    })
+  } else if (dmarcPolicy === "quarantine") {
+    items.push({
+      id: "dmarc",
+      status: "pass",
+      score: 16,
+      weight: 20,
+      label: "DMARC policy",
+      detail: "DMARC is published with p=quarantine.",
+      recommendation: "Move toward p=reject once legitimate senders pass alignment.",
+    })
+  } else if (dmarcPolicy === "none") {
+    items.push({
+      id: "dmarc",
+      status: "warning",
+      score: 12,
+      weight: 20,
+      label: "DMARC policy",
+      detail: "DMARC is published in monitoring mode.",
+      recommendation: "Use reports to fix alignment, then move toward quarantine or reject.",
+    })
+  } else {
+    items.push({
+      id: "dmarc",
+      status: "fail",
+      score: 0,
+      weight: 20,
+      label: "DMARC policy",
+      detail: "No DMARC policy was found.",
+      recommendation: "Publish a TXT record at _dmarc with at least p=none and a reporting mailbox.",
+    })
+  }
+
+  items.push(input.dkimRecords.length > 0 ? {
+    id: "dkim",
+    status: "pass",
+    score: 15,
+    weight: 15,
+    label: "DKIM key",
+    detail: `${input.dkimRecords.length} DKIM-like record${input.dkimRecords.length === 1 ? "" : "s"} found for the selector.`,
+    recommendation: "DKIM helps messages survive forwarding and pass DMARC alignment.",
+  } : {
+    id: "dkim",
+    status: "warning",
+    score: 5,
+    weight: 15,
+    label: "DKIM key",
+    detail: "No DKIM key was found for the selector checked.",
+    recommendation: "Check the selector from your mail provider and publish the DKIM TXT record.",
+  })
+
+  if (!input.blacklistResults) {
+    items.push({
+      id: "blacklist",
+      status: "info",
+      score: 10,
+      weight: 20,
+      label: "IP blacklist",
+      detail: "No sender IP was checked.",
+      recommendation: "Enter the IPv4 sender address from a real email header to check DNS blocklists.",
+    })
+  } else if (input.blacklistResults.some((result) => result.listed)) {
+    items.push({
+      id: "blacklist",
+      status: "fail",
+      score: 0,
+      weight: 20,
+      label: "IP blacklist",
+      detail: "The sender IP appears on at least one DNS blocklist.",
+      recommendation: "Fix the sending issue first, then follow the listed operator's delisting process.",
+    })
+  } else {
+    items.push({
+      id: "blacklist",
+      status: "pass",
+      score: 20,
+      weight: 20,
+      label: "IP blacklist",
+      detail: "The sender IP was not listed by the checked DNSBL zones.",
+      recommendation: "Keep monitoring bounces and complaint signals if delivery changes.",
+    })
+  }
+
+  const score = Math.min(100, items.reduce((total, item) => total + item.score, 0))
+
+  return {
+    score,
+    grade: getHealthGrade(score),
+    items,
+  }
 }
 
 function unfoldHeaders(rawHeaders: string) {

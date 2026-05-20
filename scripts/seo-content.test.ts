@@ -105,6 +105,10 @@ for (const slug of ["spf-generator", "dmarc-generator", "blacklist-checker"]) {
   assert.ok(EMAIL_TOOL_PAGES.some((tool) => tool.slug === slug), `${slug} tool metadata is missing`)
 }
 
+assert.ok(EMAIL_TOOL_PAGES.some((tool) => tool.slug === "email-dns-health-check"), "email-dns-health-check tool metadata is missing")
+assert.equal(getEmailToolContent("en", "email-dns-health-check").mode, "health")
+assert.ok(getEmailToolContent("en", "email-dns-health-check").relatedGuides.includes("why-email-goes-to-spam"))
+
 for (const slug of ["spf-record-examples", "dmarc-record-examples", "remove-ip-from-email-blacklists"]) {
   assert.ok(EMAIL_GUIDE_PAGES.some((guide) => guide.slug === slug), `${slug} guide metadata is missing`)
 }

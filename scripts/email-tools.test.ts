@@ -3,6 +3,7 @@ import {
   buildDmarcRecord,
   buildDnsLookupQuery,
   buildDnsblQueries,
+  buildEmailHealthReport,
   buildSpfRecord,
   filterDnsRecords,
   getSpfPresetIncludes,
@@ -103,3 +104,37 @@ const presetSpfRecord = buildSpfRecord({
   all: "~all",
 })
 assert.equal(presetSpfRecord, "v=spf1 include:_spf.google.com include:spf.protection.outlook.com ~all")
+
+const healthyReport = buildEmailHealthReport({
+  mxRecords: [{ name: "example.com", type: "MX", ttl: 300, value: "10 mx.example.com." }],
+  spfRecords: [{ name: "example.com", type: "TXT", ttl: 300, value: '"v=spf1 include:_spf.google.com ~all"' }],
+  dmarcRecords: [{ name: "_dmarc.example.com", type: "TXT", ttl: 300, value: '"v=DMARC1; p=reject; rua=mailto:dmarc@example.com"' }],
+  dkimRecords: [{ name: "default._domainkey.example.com", type: "TXT", ttl: 300, value: '"v=DKIM1; k=rsa; p=abc123"' }],
+  blacklistResults: [{ zone: "zen.spamhaus.org", listed: false }],
+})
+assert.equal(healthyReport.score, 100)
+assert.equal(healthyReport.items.every((item) => item.status === "pass"), true)
+
+const riskyReport = buildEmailHealthReport({
+  mxRecords: [{ name: "example.com", type: "MX", ttl: 300, value: "10 mx.example.com." }],
+  spfRecords: [],
+  dmarcRecords: [],
+  dkimRecords: [],
+  blacklistResults: [{ zone: "zen.spamhaus.org", listed: true }],
+})
+assert.equal(riskyReport.score, 30)
+assert.equal(riskyReport.grade, "poor")
+assert.equal(riskyReport.items.some((item) => item.id === "spf" && item.status === "fail"), true)
+assert.equal(riskyReport.items.some((item) => item.id === "blacklist" && item.status === "fail"), true)
+
+const duplicateSpfReport = buildEmailHealthReport({
+  mxRecords: [{ name: "example.com", type: "MX", ttl: 300, value: "10 mx.example.com." }],
+  spfRecords: [
+    { name: "example.com", type: "TXT", ttl: 300, value: '"v=spf1 include:_spf.example.com ~all"' },
+    { name: "example.com", type: "TXT", ttl: 300, value: '"v=spf1 include:sendgrid.net ~all"' },
+  ],
+  dmarcRecords: [{ name: "_dmarc.example.com", type: "TXT", ttl: 300, value: '"v=DMARC1; p=none; rua=mailto:dmarc@example.com"' }],
+  dkimRecords: [],
+})
+assert.equal(duplicateSpfReport.items.find((item) => item.id === "spf")?.status, "warning")
+assert.equal(duplicateSpfReport.items.find((item) => item.id === "dmarc")?.status, "warning")

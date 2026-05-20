@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { BlacklistCheckerTool } from "@/components/tools/blacklist-checker-tool"
 import { DnsLookupTool } from "@/components/tools/dns-lookup-tool"
+import { EmailHealthCheckTool } from "@/components/tools/email-health-check-tool"
 import { EmailHeaderAnalyzerTool } from "@/components/tools/email-header-analyzer-tool"
 import { EmailRecordGeneratorTool } from "@/components/tools/email-record-generator-tool"
 import { Header } from "@/components/layout/header"
@@ -114,6 +115,8 @@ export default async function ToolPage({
               <EmailRecordGeneratorTool kind="dmarc" locale={locale} />
             ) : tool.mode === "blacklist" ? (
               <BlacklistCheckerTool locale={locale} />
+            ) : tool.mode === "health" ? (
+              <EmailHealthCheckTool locale={locale} />
             ) : (
               <DnsLookupTool copy={tool.toolCopy} defaultMode={tool.mode} />
             )}

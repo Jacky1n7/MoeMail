@@ -57,7 +57,7 @@ export type EmailHeaderAnalyzerCopy = {
 
 export type EmailToolContent = {
   slug: EmailToolPageSlug
-  mode: "mx" | "spf" | "dmarc" | "dkim" | "header" | "spf-generator" | "dmarc-generator" | "blacklist"
+  mode: "mx" | "spf" | "dmarc" | "dkim" | "header" | "spf-generator" | "dmarc-generator" | "blacklist" | "health"
   title: string
   description: string
   breadcrumb: string
@@ -1235,7 +1235,9 @@ const TOOL_CONTENT: Record<Locale, Partial<Record<EmailToolPageSlug, EmailToolCo
   },
 }
 
-const ADDITIONAL_TOOL_CONTENT: Record<Locale, Record<"spf-generator" | "dmarc-generator" | "blacklist-checker", EmailToolContentEntry>> = {
+type AdditionalToolContentSlug = "spf-generator" | "dmarc-generator" | "blacklist-checker" | "email-dns-health-check"
+
+const ADDITIONAL_TOOL_CONTENT: Record<Locale, Record<AdditionalToolContentSlug, EmailToolContentEntry>> = {
   en: {
     "spf-generator": {
       mode: "spf-generator",
@@ -1309,6 +1311,31 @@ const ADDITIONAL_TOOL_CONTENT: Record<Locale, Record<"spf-generator" | "dmarc-ge
         {
           question: "Can I check a domain name?",
           answer: "This checker is for IPv4 sender addresses. Look up the sending IP from your mail headers first.",
+        },
+      ],
+    },
+    "email-dns-health-check": {
+      mode: "health",
+      title: "Email DNS Health Check",
+      description: "Run one domain check for MX, SPF, DMARC, DKIM, and sender IP blacklist signals.",
+      breadcrumb: "Email Tools",
+      sections: [
+        {
+          heading: "One report for the email DNS foundation",
+          body: [
+            "Email delivery problems usually come from a mix of DNS records, authentication alignment, and sender reputation. This health check brings the core signals into one score.",
+            "Use it before launching a domain, after changing providers, or when a real message suddenly lands in spam.",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "Do I need a DKIM selector?",
+          answer: "Yes. DKIM records live under selector._domainkey.example.com, so the checker needs the selector from your mail provider.",
+        },
+        {
+          question: "Is the blacklist check required?",
+          answer: "No. It is optional because it needs a sender IPv4 address from a real email header.",
         },
       ],
     },
@@ -1389,6 +1416,31 @@ const ADDITIONAL_TOOL_CONTENT: Record<Locale, Record<"spf-generator" | "dmarc-ge
         },
       ],
     },
+    "email-dns-health-check": {
+      mode: "health",
+      title: "邮件 DNS 健康检查",
+      description: "一次检查域名的 MX、SPF、DMARC、DKIM 和发信 IP 黑名单信号。",
+      breadcrumb: "邮件工具",
+      sections: [
+        {
+          heading: "把邮件 DNS 基础放进一份报告",
+          body: [
+            "邮件投递问题通常来自 DNS 记录、认证对齐和发信信誉的组合。这个健康检查会把核心信号合并成一个评分。",
+            "上线新域名、迁移服务商，或真实邮件突然进垃圾箱时，都可以先跑一次总检查。",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "我需要 DKIM selector 吗？",
+          answer: "需要。DKIM 记录位于 selector._domainkey.example.com，所以检查器需要邮件服务商给你的 selector。",
+        },
+        {
+          question: "必须检查黑名单吗？",
+          answer: "不必须。黑名单检查需要从真实邮件头里拿到 IPv4 发信地址，所以它是可选项。",
+        },
+      ],
+    },
   },
   "zh-TW": {
     "spf-generator": {
@@ -1463,6 +1515,31 @@ const ADDITIONAL_TOOL_CONTENT: Record<Locale, Record<"spf-generator" | "dmarc-ge
         {
           question: "可以檢查網域嗎？",
           answer: "這個檢查器面向 IPv4 寄信地址。請先從郵件標頭找到實際寄信 IP。",
+        },
+      ],
+    },
+    "email-dns-health-check": {
+      mode: "health",
+      title: "郵件 DNS 健康檢查",
+      description: "一次檢查網域的 MX、SPF、DMARC、DKIM 和寄信 IP 黑名單信號。",
+      breadcrumb: "郵件工具",
+      sections: [
+        {
+          heading: "把郵件 DNS 基礎放進一份報告",
+          body: [
+            "郵件投遞問題通常來自 DNS 記錄、驗證對齊和寄信信譽的組合。這個健康檢查會把核心信號合併成一個評分。",
+            "上線新網域、搬移服務商，或真實郵件突然進垃圾信時，都可以先跑一次總檢查。",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "我需要 DKIM selector 嗎？",
+          answer: "需要。DKIM 記錄位於 selector._domainkey.example.com，所以檢查器需要郵件服務商給你的 selector。",
+        },
+        {
+          question: "必須檢查黑名單嗎？",
+          answer: "不必。黑名單檢查需要從真實郵件標頭裡拿到 IPv4 寄信地址，所以它是選填項。",
         },
       ],
     },
@@ -1543,6 +1620,31 @@ const ADDITIONAL_TOOL_CONTENT: Record<Locale, Record<"spf-generator" | "dmarc-ge
         },
       ],
     },
+    "email-dns-health-check": {
+      mode: "health",
+      title: "メール DNS ヘルスチェック",
+      description: "MX、SPF、DMARC、DKIM、送信 IP のブラックリスト信号をまとめて確認します。",
+      breadcrumb: "メールツール",
+      sections: [
+        {
+          heading: "メール DNS の基盤を 1 つのレポートに",
+          body: [
+            "メール配信の問題は、DNS レコード、認証整合、送信元レピュテーションが組み合わさって起きることが多いです。このヘルスチェックは主要な信号を 1 つのスコアにまとめます。",
+            "新しいドメインの公開前、プロバイダー移行後、実際のメールが急に迷惑メールに入ったときに使えます。",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "DKIM セレクターは必要ですか？",
+          answer: "はい。DKIM レコードは selector._domainkey.example.com にあるため、メールプロバイダーのセレクターが必要です。",
+        },
+        {
+          question: "ブラックリストチェックは必須ですか？",
+          answer: "いいえ。実際のメールヘッダーから IPv4 送信元アドレスを取得できる場合だけ入力してください。",
+        },
+      ],
+    },
   },
   ko: {
     "spf-generator": {
@@ -1620,6 +1722,31 @@ const ADDITIONAL_TOOL_CONTENT: Record<Locale, Record<"spf-generator" | "dmarc-ge
         },
       ],
     },
+    "email-dns-health-check": {
+      mode: "health",
+      title: "메일 DNS 상태 검사",
+      description: "MX, SPF, DMARC, DKIM, 발신 IP 블랙리스트 신호를 한 번에 확인합니다.",
+      breadcrumb: "메일 도구",
+      sections: [
+        {
+          heading: "메일 DNS 기반을 하나의 보고서로",
+          body: [
+            "메일 전달 문제는 DNS 레코드, 인증 정렬, 발신 평판이 함께 작용해 생기는 경우가 많습니다. 이 상태 검사는 핵심 신호를 하나의 점수로 묶습니다.",
+            "새 도메인 출시 전, 제공업체 변경 후, 실제 메일이 갑자기 스팸으로 갈 때 사용할 수 있습니다.",
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "DKIM selector가 필요한가요?",
+          answer: "네. DKIM 레코드는 selector._domainkey.example.com에 있으므로 메일 제공업체의 selector가 필요합니다.",
+        },
+        {
+          question: "블랙리스트 검사는 필수인가요?",
+          answer: "아닙니다. 실제 메일 헤더에서 IPv4 발신 주소를 확인할 수 있을 때만 입력하세요.",
+        },
+      ],
+    },
   },
 }
 
@@ -1632,6 +1759,7 @@ const DEFAULT_TOOL_RELATED_GUIDES: Record<EmailToolPageSlug, EmailGuidePageSlug[
   "spf-generator": ["spf-record-examples", "how-to-fix-spf-fail"],
   "dmarc-generator": ["dmarc-record-examples", "dmarc-policy-guide"],
   "blacklist-checker": ["remove-ip-from-email-blacklists", "why-email-goes-to-spam"],
+  "email-dns-health-check": ["why-email-goes-to-spam", "spf-record-examples", "dmarc-record-examples"],
 }
 
 const GUIDE_CONTENT: Record<Locale, Partial<Record<EmailGuidePageSlug, EmailGuideContent>>> = {
