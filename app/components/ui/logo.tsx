@@ -1,11 +1,17 @@
 "use client"
 
 import Link from "next/link"
+import { useParams } from "next/navigation"
+import { i18n, type Locale } from "@/i18n/config"
 
 export function Logo() {
+  const params = useParams<{ locale?: string }>()
+  const locale = params.locale
+  const href = i18n.locales.includes(locale as Locale) ? `/${locale}` : `/${i18n.defaultLocale}`
+
   return (
     <Link 
-      href="/"
+      href={href}
       className="flex items-center gap-2 hover:opacity-80 transition-opacity"
     >
       <div className="relative w-8 h-8">
